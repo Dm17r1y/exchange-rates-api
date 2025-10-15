@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"exchange-rates-service/src/internal"
+	"exchange-rates-service/src/internal/service"
 	"log"
 	"net/http"
 	"time"
 )
+
+var rateService = service.NewRateService()
 
 type startUpdateRateRequest struct {
 	From string `json:"from"`
@@ -31,7 +33,7 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updateId, err := internal.StartUpdateRate(request.From, request.To)
+	updateId, err := rateService.StartUpdateRate(request.From, request.To)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -67,7 +69,7 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rate, err := internal.CheckUpdateRate(updateId)
+	rate, err := rateService.CheckUpdateRate(updateId)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -108,7 +110,7 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rate, err := internal.GetLastRate(from, to)
+	rate, err := rateService.GetLastRate(from, to)
 	
 	if err != nil {
 		log.Println(err)
