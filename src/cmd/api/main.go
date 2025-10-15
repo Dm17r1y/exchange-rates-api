@@ -2,26 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal"
+	"exchange-rates-service/src/internal/model"
 	"exchange-rates-service/src/internal/service"
 	"log"
 	"net/http"
 	"time"
-	"errors"
 )
 
 var serviceConfig = config.NewConfig()
 var rateService = service.NewRateService(serviceConfig)
 
-type startUpdateRateRequest struct {
-	From string `json:"from"`
-	To   string `json:"to"`
-}
-
-type startUpdateRateResponse struct {
-	UpdateId string `json:"updateId"`
-}
 
 func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -29,11 +22,14 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var request startUpdateRateRequest
-	err := json.NewDecoder(r.Body).Decode(&request)
+	var request model.StartUpdateRateRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		handleError(w, err)
+		return
+	}
 
-	if err != nil {
-		handleError(w, internal.NewBadRequestError(err.Error()))
+	if err := request.Validate(); err != nil {
+		handleError(w, err)
 		return
 	}
 
@@ -43,20 +39,14 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := startUpdateRateResponse{
+	response := model.StartUpdateRateResponse{
 		UpdateId: updateId,
 	}
 
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
+	if err = json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, err)
 		return
 	}
-}
-
-type getUpdateRateResponse struct {
-	Rate       *string `json:"rate"`
-	UpdateTime *string `json:"updateTime"`
 }
 
 func getUpdateRate(w http.ResponseWriter, r *http.Request) {
@@ -78,29 +68,24 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if update.UpdateDateTime == nil {
-		err = json.NewEncoder(w).Encode(getUpdateRateResponse{})
+		err = json.NewEncoder(w).Encode(model.GetRateResponse{})
 		handleError(w, err)
 		return
 	}
 
 	rateValue := update.Rate.String()
 	updateValue := update.UpdateDateTime.Format(time.RFC3339Nano)
-	response := getUpdateRateResponse{
+	response := model.GetRateResponse{
 		Rate:       &rateValue,
 		UpdateTime: &updateValue,
 	}
 
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
+	if err = json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, err)
 		return
 	}
 }
 
-type getLastUpdateRateResponse struct {
-	Rate       *string `json:"rate"`
-	UpdateTime *string `json:"updateTime"`
-}
 
 func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -112,12 +97,12 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	to := r.URL.Query().Get("to")
 
 	if from == "" {
-		handleError(w, internal.NewBadRequestError("from is not set"))
+		handleError(w, internal.NewBadRequestError("from currency is not set"))
 		return
 	}
 
 	if to == "" {
-		handleError(w, internal.NewBadRequestError("to is not set"))
+		handleError(w, internal.NewBadRequestError("to currency is not set"))
 		return
 	}
 
@@ -130,20 +115,19 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rate.UpdateDateTime == nil {
-		err = json.NewEncoder(w).Encode(getLastUpdateRateResponse{})
+		err = json.NewEncoder(w).Encode(model.GetRateResponse{})
 		handleError(w, err)
 		return
 	}
 
 	rateValue := rate.Rate.String()
 	updateValue := rate.UpdateDateTime.Format(time.RFC3339Nano)
-	response := getUpdateRateResponse{
+	response := model.GetRateResponse{
 		Rate:       &rateValue,
 		UpdateTime: &updateValue,
 	}
 
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
+	if err = json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, err)
 		return
 	}

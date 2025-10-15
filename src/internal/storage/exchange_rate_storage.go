@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal"
-	"time"
+	"exchange-rates-service/src/internal/model"
 
 	_ "github.com/lib/pq"
 )
@@ -18,19 +18,13 @@ func NewExchangeRateStorage(config *config.Config) *ExchangeRateStorage {
 	return &ExchangeRateStorage{config: config}
 }
 
-type ExchangeRate struct {
-	FromCurrency string
-	ToCurrency   string
-	RateValue    []byte
-	UpdateTime   *time.Time
-}
 
 const getRateSql = `
 SELECT rate_value, update_time FROM exchange_rate
 WHERE from_currency = $1 AND to_currency = $2
 `
 
-func (storage *ExchangeRateStorage) GetRate(from string, to string) (*ExchangeRate, error) {
+func (storage *ExchangeRateStorage) GetRate(from string, to string) (*model.ExchangeRateDbo, error) {
 	db, err := sql.Open("postgres", storage.config.PostgresConnectionString)
 	if err != nil {
 		return nil, err
@@ -53,7 +47,7 @@ func (storage *ExchangeRateStorage) GetRate(from string, to string) (*ExchangeRa
 		return nil, internal.NewNotFoundError("rate updates not found")
 	}
 
-	rate := ExchangeRate{
+	rate := model.ExchangeRateDbo{
 		FromCurrency: from,
 		ToCurrency:   to,
 	}

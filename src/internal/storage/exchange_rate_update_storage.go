@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal"
-	"time"
+	"exchange-rates-service/src/internal/model"
 
 	_ "github.com/lib/pq"
 )
@@ -18,23 +18,6 @@ func NewExchangeRateUpdateStorage(config *config.Config) *ExchangeRateUpdateStor
 	return &ExchangeRateUpdateStorage{
 		config: config,
 	}
-}
-
-type ExchangeRateUpdateStatus int
-
-const (
-	Updating ExchangeRateUpdateStatus = iota
-	Done
-	Error
-)
-
-type ExchangeRateUpdate struct {
-	Id           string
-	FromCurrency string
-	ToCurrency   string
-	Status       ExchangeRateUpdateStatus
-	RateValue    []byte
-	UpdateTime   *time.Time
 }
 
 const getOrCreateRateUpdateSql = `
@@ -54,7 +37,7 @@ UNION ALL
 SELECT id FROM new_update
 `
 
-func (storage *ExchangeRateUpdateStorage) GetOrCreateRateUpdate(updateId string, from string, to string) (*ExchangeRateUpdate, error) {
+func (storage *ExchangeRateUpdateStorage) GetOrCreateRateUpdate(updateId string, from string, to string) (*model.ExchangeRateUpdateDbo, error) {
 	db, err := sql.Open("postgres", storage.config.PostgresConnectionString)
 	if err != nil {
 		return nil, err
@@ -74,10 +57,10 @@ func (storage *ExchangeRateUpdateStorage) GetOrCreateRateUpdate(updateId string,
 
 	rows.Next()
 
-	update := ExchangeRateUpdate{
+	update := model.ExchangeRateUpdateDbo{
 		FromCurrency: from,
 		ToCurrency:   to,
-		Status:       Updating,
+		Status:       model.StatusUpdating,
 	}
 	err = rows.Scan(&update.Id)
 	return &update, err
@@ -88,7 +71,7 @@ SELECT from_currency, to_currency, status, rate_value, update_time FROM exchange
 WHERE id = $1
 `
 
-func (storage *ExchangeRateUpdateStorage) GetRateUpdate(updateId string) (*ExchangeRateUpdate, error) {
+func (storage *ExchangeRateUpdateStorage) GetRateUpdate(updateId string) (*model.ExchangeRateUpdateDbo, error) {
 	db, err := sql.Open("postgres", storage.config.PostgresConnectionString)
 	if err != nil {
 		return nil, err
@@ -111,7 +94,7 @@ func (storage *ExchangeRateUpdateStorage) GetRateUpdate(updateId string) (*Excha
 		return nil, internal.NewNotFoundError("update not found")
 	}
 
-	update := ExchangeRateUpdate{Id: updateId}
+	update := model.ExchangeRateUpdateDbo{Id: updateId}
 
 	err = rows.Scan(&update.FromCurrency, &update.ToCurrency, &update.Status, &update.RateValue, &update.UpdateTime)
 	return &update, err
