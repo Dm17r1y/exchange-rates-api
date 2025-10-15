@@ -19,11 +19,11 @@ func (service *RateService) StartUpdateRate(from string, to string) (string, err
 	return service.repository.GetOrCreateRateUpdate(from, to)
 }
 
-func (service *RateService) GetRateUpdate(updateId string) (*repository.ExchangeRate, error) {
+func (service *RateService) GetRateUpdate(updateId string) (repository.ExchangeRate, error) {
 	return service.repository.GetRateUpdate(updateId)
 }
 
-func (service *RateService) GetLastRate(from string, to string) (*repository.ExchangeRate, error) {
+func (service *RateService) GetLastRate(from string, to string) (repository.ExchangeRate, error) {
 	return service.repository.GetLastRate(from, to)
 
 }

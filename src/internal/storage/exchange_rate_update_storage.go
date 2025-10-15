@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"exchange-rates-service/src/config"
+	"exchange-rates-service/src/internal"
 	"time"
-	"errors"
 
 	_ "github.com/lib/pq"
 )
@@ -108,7 +108,7 @@ func (storage *ExchangeRateUpdateStorage) GetRateUpdate(updateId string) (*Excha
 
 	hasData := rows.Next()
 	if !hasData {
-		return nil, errors.New("statement has no data")
+		return nil, internal.NewNotFoundError("update not found")
 	}
 
 	update := ExchangeRateUpdate{Id: updateId}

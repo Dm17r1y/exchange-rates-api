@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"exchange-rates-service/src/config"
+	"exchange-rates-service/src/internal"
 	"exchange-rates-service/src/internal/service"
 	"log"
 	"net/http"
 	"time"
+	"errors"
 )
 
 var serviceConfig = config.NewConfig()
@@ -31,14 +33,13 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&request)
 
 	if err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		handleError(w, internal.NewBadRequestError(err.Error()))
 		return
 	}
 
 	updateId, err := rateService.StartUpdateRate(request.From, request.To)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
@@ -48,15 +49,14 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 }
 
 type getUpdateRateResponse struct {
-	Rate       string `json:"rate"`
-	UpdateTime string `json:"updateTime"`
+	Rate       *string `json:"rate"`
+	UpdateTime *string `json:"updateTime"`
 }
 
 func getUpdateRate(w http.ResponseWriter, r *http.Request) {
@@ -67,38 +67,39 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 
 	updateId := r.URL.Query().Get("updateId")
 	if updateId == "" {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		handleError(w, internal.NewBadRequestError("updateId is not set"))
 		return
 	}
 
 	update, err := rateService.GetRateUpdate(updateId)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
-	if update == nil {
-		_ = json.NewEncoder(w).Encode(nil)
+	if update.UpdateDateTime == nil {
+		err = json.NewEncoder(w).Encode(getUpdateRateResponse{})
+		handleError(w, err)
 		return
 	}
 
+	rateValue := update.Rate.String()
+	updateValue := update.UpdateDateTime.Format(time.RFC3339Nano)
 	response := getUpdateRateResponse{
-		Rate:       update.Rate.String(),
-		UpdateTime: update.UpdateDateTime.Format(time.RFC3339Nano),
+		Rate:       &rateValue,
+		UpdateTime: &updateValue,
 	}
 
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 }
 
 type getLastUpdateRateResponse struct {
-	Rate       string `json:"rate"`
-	UpdateTime string `json:"updateTime"`
+	Rate       *string `json:"rate"`
+	UpdateTime *string `json:"updateTime"`
 }
 
 func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
@@ -110,35 +111,58 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	from := r.URL.Query().Get("from")
 	to := r.URL.Query().Get("to")
 
-	if from == "" || to == "" {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+	if from == "" {
+		handleError(w, internal.NewBadRequestError("from is not set"))
 		return
 	}
+
+	if to == "" {
+		handleError(w, internal.NewBadRequestError("to is not set"))
+		return
+	}
+
 
 	rate, err := rateService.GetLastRate(from, to)
 
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
-	if rate == nil {
-		_ = json.NewEncoder(w).Encode(nil)
+	if rate.UpdateDateTime == nil {
+		err = json.NewEncoder(w).Encode(getLastUpdateRateResponse{})
+		handleError(w, err)
 		return
 	}
 
-	response := getLastUpdateRateResponse{
-		Rate:       rate.Rate.String(),
-		UpdateTime: rate.UpdateDateTime.Format(time.RFC3339Nano),
+	rateValue := rate.Rate.String()
+	updateValue := rate.UpdateDateTime.Format(time.RFC3339Nano)
+	response := getUpdateRateResponse{
+		Rate:       &rateValue,
+		UpdateTime: &updateValue,
 	}
 
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
+}
+
+func handleError(w http.ResponseWriter, err error) {
+	if err == nil {
+		return
+	}
+	
+	serviceError := &internal.ServiceError{} 
+	if errors.As(err, &serviceError) {
+		http.Error(w, serviceError.ErrorMessage, int(serviceError.ErrorType))
+		return
+	}
+
+	log.Println(err)
+	http.Error(w, "Internal server error", http.StatusInternalServerError)	
+
 }
 
 func main() {

@@ -1,10 +1,12 @@
 package storage
 
 import (
-	"time"
-	"exchange-rates-service/src/config"
 	"context"
 	"database/sql"
+	"exchange-rates-service/src/config"
+	"exchange-rates-service/src/internal"
+	"time"
+
 	_ "github.com/lib/pq"
 )
 
@@ -15,7 +17,6 @@ type ExchangeRateStorage struct {
 func NewExchangeRateStorage(config *config.Config) *ExchangeRateStorage {
 	return &ExchangeRateStorage{config: config}
 }
-
 
 type ExchangeRate struct {
 	FromCurrency string
@@ -49,12 +50,12 @@ func (storage *ExchangeRateStorage) GetRate(from string, to string) (*ExchangeRa
 
 	hasData := rows.Next()
 	if !hasData {
-		return nil, nil
+		return nil, internal.NewNotFoundError("rate updates not found")
 	}
 
 	rate := ExchangeRate{
 		FromCurrency: from,
-		ToCurrency: to,
+		ToCurrency:   to,
 	}
 	err = rows.Scan(&rate.RateValue, &rate.UpdateTime)
 	return &rate, err

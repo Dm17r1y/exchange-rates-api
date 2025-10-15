@@ -23,7 +23,7 @@ func NewExchangeRateRepository(config *config.Config) *ExchangeRateRepository {
 
 type ExchangeRate struct {
 	Rate           decimal.Decimal
-	UpdateDateTime time.Time
+	UpdateDateTime *time.Time
 }
 
 func (r *ExchangeRateRepository) GetOrCreateRateUpdate(from string, to string) (string, error) {
@@ -35,49 +35,49 @@ func (r *ExchangeRateRepository) GetOrCreateRateUpdate(from string, to string) (
 	return update.Id, nil
 }
 
-func (r *ExchangeRateRepository) GetRateUpdate(updateId string) (*ExchangeRate, error) {
+func (r *ExchangeRateRepository) GetRateUpdate(updateId string) (ExchangeRate, error) {
 	update, err := r.updateStorage.GetRateUpdate(updateId)
 	if err != nil {
-		return nil, err
+		return ExchangeRate{}, err
 	}
 
 	if update.Status != storage.Done {
-		return nil, nil
+		return ExchangeRate{}, nil
 	}
 
 	rateValue, err := decimal.NewFromString(string(update.RateValue))
 	if err != nil {
-		return nil, err
+		return ExchangeRate{}, err
 	}
 
 	rate := ExchangeRate{
 		Rate:           rateValue,
-		UpdateDateTime: *update.UpdateTime,
+		UpdateDateTime: update.UpdateTime,
 	}
 
-	return &rate, nil
+	return rate, nil
 }
 
-func (r *ExchangeRateRepository) GetLastRate(from string, to string) (*ExchangeRate, error) {
+func (r *ExchangeRateRepository) GetLastRate(from string, to string) (ExchangeRate, error) {
 	rate, err := r.rateStorage.GetRate(from, to)
 
 	if err != nil {
-		return nil, err
+		return ExchangeRate{}, err
 	}
 
 	if rate == nil {
-		return nil, nil
+		return ExchangeRate{}, nil
 	}
 
 	rateValue, err := decimal.NewFromString(string(rate.RateValue))
 	if err != nil {
-		return nil, err
+		return ExchangeRate{}, err
 	}
 
 	resultRate := ExchangeRate{
 		Rate:           rateValue,
-		UpdateDateTime: *rate.UpdateTime,
+		UpdateDateTime: rate.UpdateTime,
 	}
 
-	return &resultRate, nil
+	return resultRate, nil
 }
