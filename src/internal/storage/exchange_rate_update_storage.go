@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal"
 	"exchange-rates-service/src/internal/model"
 
@@ -11,13 +10,11 @@ import (
 )
 
 type ExchangeRateUpdateStorage struct {
-	config *config.Config
+	db *sql.DB
 }
 
-func NewExchangeRateUpdateStorage(config *config.Config) *ExchangeRateUpdateStorage {
-	return &ExchangeRateUpdateStorage{
-		config: config,
-	}
+func NewExchangeRateUpdateStorage(db *sql.DB) *ExchangeRateUpdateStorage {
+	return &ExchangeRateUpdateStorage{db: db}
 }
 
 const getOrCreateRateUpdateSql = `
@@ -38,12 +35,7 @@ SELECT id FROM new_update
 `
 
 func (storage *ExchangeRateUpdateStorage) GetOrCreateRateUpdate(updateId string, from string, to string) (*model.ExchangeRateUpdateDbo, error) {
-	db, err := sql.Open("postgres", storage.config.PostgresConnectionString)
-	if err != nil {
-		return nil, err
-	}
-
-	stmt, err := db.PrepareContext(context.Background(), getOrCreateRateUpdateSql)
+	stmt, err := storage.db.PrepareContext(context.Background(), getOrCreateRateUpdateSql)
 	if err != nil {
 		return nil, err
 	}
@@ -67,17 +59,13 @@ func (storage *ExchangeRateUpdateStorage) GetOrCreateRateUpdate(updateId string,
 }
 
 const getRateUpdateSql = `
-SELECT from_currency, to_currency, status, rate_value, update_time FROM exchange_rate_update
+SELECT from_currency, to_currency, status, rate_value, update_time 
+FROM exchange_rate_update
 WHERE id = $1
 `
 
 func (storage *ExchangeRateUpdateStorage) GetRateUpdate(updateId string) (*model.ExchangeRateUpdateDbo, error) {
-	db, err := sql.Open("postgres", storage.config.PostgresConnectionString)
-	if err != nil {
-		return nil, err
-	}
-
-	stmt, err := db.PrepareContext(context.Background(), getRateUpdateSql)
+	stmt, err := storage.db.PrepareContext(context.Background(), getRateUpdateSql)
 	if err != nil {
 		return nil, err
 	}
@@ -98,4 +86,74 @@ func (storage *ExchangeRateUpdateStorage) GetRateUpdate(updateId string) (*model
 
 	err = rows.Scan(&update.FromCurrency, &update.ToCurrency, &update.Status, &update.RateValue, &update.UpdateTime)
 	return &update, err
+}
+
+const getRatesForUpdateSql = `
+SELECT id, from_currency, to_currency
+FROM exchange_rate_update
+WHERE status = 0
+LIMIT $1
+`
+
+func (storage *ExchangeRateUpdateStorage) GetRatesForUpdate(fetchSize int) ([]model.ExchangeRateUpdateDbo, error) {
+	stmt, err := storage.db.PrepareContext(context.Background(), getRatesForUpdateSql)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(context.Background(), fetchSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	dbos := make([]model.ExchangeRateUpdateDbo, 0, fetchSize)
+	for rows.Next() {
+		update := model.ExchangeRateUpdateDbo{
+			Status: 0,
+		}
+
+		if err := rows.Scan(&update.Id, &update.FromCurrency, &update.ToCurrency); err != nil {
+			return nil, err
+		}
+
+		dbos = append(dbos, update)
+	}
+
+	return dbos, nil
+}
+
+const updateRateSql = `
+UPDATE exchange_rate_update 
+SET rate_value = $2, update_time = $3, status = $4
+WHERE id = $1
+`
+
+func (storage *ExchangeRateUpdateStorage) UpdateRateTx(tx *sql.Tx, model *model.ExchangeRateUpdateDbo) error {
+	stmt, err := tx.PrepareContext(context.Background(), updateRateSql)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(context.Background(), model.Id, model.RateValue, model.UpdateTime, model.Status)
+	return err
+}
+
+const setErrorSql = `
+UPDATE exchange_rate_update
+SET status = 2
+WHERE id = $1
+`
+
+func (storage *ExchangeRateUpdateStorage) SetError(updateId string) error {
+	stmt, err := storage.db.PrepareContext(context.Background(), setErrorSql)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(context.Background(), updateId)
+	return err
 }

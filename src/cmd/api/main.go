@@ -13,7 +13,7 @@ import (
 )
 
 var serviceConfig = config.NewConfig()
-var rateService = service.NewRateService(serviceConfig)
+var rateService *service.RateService
 
 
 func startUpdateRate(w http.ResponseWriter, r *http.Request) {
@@ -150,13 +150,19 @@ func handleError(w http.ResponseWriter, err error) {
 }
 
 func main() {
+	var err error
+
+	rateService, err = service.NewRateService(serviceConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	http.HandleFunc("/api/rates/v1/update/start", startUpdateRate)
 	http.HandleFunc("/api/rates/v1/update", getUpdateRate)
 	http.HandleFunc("/api/rates/v1/update/last", getLastUpdateRate)
 
 	log.Println("Starting server at port 8080")
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Println("Error starting the server:", err)
 	}

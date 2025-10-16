@@ -7,14 +7,14 @@ import (
 )
 
 type ExchangeRate struct {
-	Rate           decimal.Decimal
+	Rate           *decimal.Decimal
 	UpdateDateTime *time.Time
 }
 
 type ExchangeRateDbo struct {
 	FromCurrency string
 	ToCurrency   string
-	RateValue    []byte
+	RateValue    *decimal.Decimal
 	UpdateTime   *time.Time
 }
 
@@ -31,6 +31,6 @@ type ExchangeRateUpdateDbo struct {
 	FromCurrency string
 	ToCurrency   string
 	Status       ExchangeRateUpdateStatus
-	RateValue    []byte
+	RateValue    *decimal.Decimal
 	UpdateTime   *time.Time
 }

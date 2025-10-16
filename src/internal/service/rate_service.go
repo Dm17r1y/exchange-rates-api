@@ -13,15 +13,20 @@ type RateService struct {
 	repository *repository.ExchangeRateRepository
 }
 
-func NewRateService(config *config.Config) *RateService {
+func NewRateService(config *config.Config) (*RateService, error) {
+	r, err := repository.NewExchangeRateRepository(config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &RateService{
 		supportedCurrencies: map[string]bool{
 			"EUR": true,
 			"USD": true,
 			"MXN": true,
 		},
-		repository: repository.NewExchangeRateRepository(config),
-	}
+		repository: r,
+	}, nil
 }
 
 func (service *RateService) StartUpdateRate(from string, to string) (string, error) {

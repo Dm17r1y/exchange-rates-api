@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal"
 	"exchange-rates-service/src/internal/model"
 
@@ -11,11 +10,11 @@ import (
 )
 
 type ExchangeRateStorage struct {
-	config *config.Config
+	db *sql.DB
 }
 
-func NewExchangeRateStorage(config *config.Config) *ExchangeRateStorage {
-	return &ExchangeRateStorage{config: config}
+func NewExchangeRateStorage(db *sql.DB) *ExchangeRateStorage {
+	return &ExchangeRateStorage{db: db}
 }
 
 
@@ -25,12 +24,7 @@ WHERE from_currency = $1 AND to_currency = $2
 `
 
 func (storage *ExchangeRateStorage) GetRate(from string, to string) (*model.ExchangeRateDbo, error) {
-	db, err := sql.Open("postgres", storage.config.PostgresConnectionString)
-	if err != nil {
-		return nil, err
-	}
-
-	stmt, err := db.PrepareContext(context.Background(), getRateSql)
+	stmt, err := storage.db.PrepareContext(context.Background(), getRateSql)
 	if err != nil {
 		return nil, err
 	}
@@ -53,4 +47,22 @@ func (storage *ExchangeRateStorage) GetRate(from string, to string) (*model.Exch
 	}
 	err = rows.Scan(&rate.RateValue, &rate.UpdateTime)
 	return &rate, err
+}
+
+const setRateSql = `
+INSERT INTO exchange_rate(from_currency, to_currency, rate_value, update_time)
+VALUES ($1, $2, $3, $4) 
+ON CONFLICT(from_currency, to_currency) 
+DO UPDATE SET rate_value = $3, update_time = $4
+`
+
+func (storage *ExchangeRateStorage) SetRateTx(tx *sql.Tx, model *model.ExchangeRateDbo) error {
+	stmt, err := tx.PrepareContext(context.Background(), setRateSql)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(context.Background(), model.FromCurrency, model.ToCurrency, model.RateValue, model.UpdateTime)
+	return err
 }
