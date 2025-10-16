@@ -8,9 +8,9 @@ import (
 )
 
 type RateServiceWorker struct {
-	config *config.Config
+	config     *config.Config
 	repository *repository.ExchangeRateRepository
-	client *integration.ExchangeRateClient
+	client     *integration.ExchangeRateApiClient
 }
 
 func NewRateServiceWorker(config *config.Config) (*RateServiceWorker, error) {
@@ -20,9 +20,9 @@ func NewRateServiceWorker(config *config.Config) (*RateServiceWorker, error) {
 	}
 
 	serviceWorker := RateServiceWorker{
-		config: config,
+		config:     config,
 		repository: r,
-		client: integration.NewExchangeRateClient(config),
+		client:     integration.NewExchangeRateIoClient(config),
 	}
 
 	return &serviceWorker, nil
@@ -33,17 +33,18 @@ func (s *RateServiceWorker) ExecuteUpdate() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	updateCount := 0	
+	updateCount := 0
 
 	for _, rateUpdate := range rateUpdates {
-		response, err := s.client.GetRates(rateUpdate.FromCurrency, rateUpdate.ToCurrency)
+		rate, err := s.client.GetRate(rateUpdate.FromCurrency, rateUpdate.ToCurrency)
 		if err != nil {
 			s.repository.SetUpdateError(rateUpdate.Id)
 			log.Println(err)
 			updateCount++
+			continue
 		}
 
-		if err := s.repository.UpdateRate(rateUpdate.Id, rateUpdate.FromCurrency, rateUpdate.ToCurrency, response.Value); err != nil {
+		if err := s.repository.UpdateRate(rateUpdate.Id, rateUpdate.FromCurrency, rateUpdate.ToCurrency, rate); err != nil {
 			return updateCount, err
 		}
 		updateCount++

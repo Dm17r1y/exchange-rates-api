@@ -1,29 +1,58 @@
 package integration
 
 import (
+	"encoding/json"
+	"errors"
 	"exchange-rates-service/src/config"
+	"fmt"
+	"net/http"
 
 	"github.com/shopspring/decimal"
 )
 
-type ExchangeRateClient struct {
+type ExchangeRateApiClient struct {
+	config *config.Config
 }
 
-type ExchangeRateClientResponse struct {
-	Value decimal.Decimal
+type ExchangeRateApiResponse struct {
+	Success   bool                       `json:"success"`
+	Timestamp uint64                     `json:"timestamp"`
+	Base      string                     `json:"base"`
+	Rates     map[string]decimal.Decimal `json:"rates"`
 }
 
-func NewExchangeRateClient(config *config.Config) *ExchangeRateClient {
-	return &ExchangeRateClient{}
+func NewExchangeRateIoClient(config *config.Config) *ExchangeRateApiClient {
+	return &ExchangeRateApiClient{
+		config: config,
+	}
 }
 
-func (c *ExchangeRateClient) GetRates(from string, to string) (ExchangeRateClientResponse, error) {
-	value, err := decimal.NewFromString("19.99")
+const apiBaseUrl = "https://api.exchangeratesapi.io"
+
+func (c *ExchangeRateApiClient) GetRate(from string, to string) (decimal.Decimal, error) {
+	apiKey := c.config.ExchangeIoApiKey
+	fullUrl := fmt.Sprintf("%s/v1/latest?access_key=%s&base=%s&symbols=%s", apiBaseUrl, apiKey, from, to)
+
+	resp, err := http.Get(fullUrl)
 	if err != nil {
-		return ExchangeRateClientResponse{}, err
+		return decimal.Decimal{}, err
+	}
+	defer resp.Body.Close()
+
+	response := ExchangeRateApiResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return decimal.Decimal{}, err
 	}
 
-	return ExchangeRateClientResponse{
-		Value: value,
-	}, nil
+	if !response.Success {
+		return decimal.Decimal{}, errors.New("error executing request")
+	}
+
+	rate, ok := response.Rates[to]
+	if !ok {
+		return decimal.Decimal{}, fmt.Errorf("response not returned for %s rate", to)
+	}
+
+	return rate, nil
 }
