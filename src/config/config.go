@@ -19,7 +19,7 @@ type Config struct {
 func NewConfig() *Config {
 	err := godotenv.Load(".env", ".env.secret")
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Warning:", err)
 	}
 
 	workerFetchSize, err := strconv.Atoi(os.Getenv("WORKER_FETCH_SIZE"))
