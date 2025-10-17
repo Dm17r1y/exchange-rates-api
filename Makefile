@@ -28,7 +28,7 @@ format:
 	swag fmt -g src/cmd/api/main.go
 
 swagger:
-	swag init -g src/cmd/api/main.go -o src/
+	swag init -g src/cmd/api/main.go -o src/docs/
 
 stop:
 	docker compose down

@@ -6,7 +6,7 @@
     "paths": {
         "/api/rates/v1/update": {
             "get": {
-                "description": "Get exchange rate update by id. Returns rate and updateTime",
+                "description": "Get the exchange rate update by updateId. Returns rate and updateTime. Both will be null if the update was not performed",
                 "consumes": [
                     "application/json"
                 ],
