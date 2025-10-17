@@ -1,0 +1,109 @@
+definitions:
+  model.GetRateResponse:
+    properties:
+      rate:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  model.StartUpdateRateResponse:
+    properties:
+      updateId:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/rates/v1/update:
+    get:
+      consumes:
+      - application/json
+      description: Get exchange rate update by id. Returns rate and updateTime
+      parameters:
+      - description: Update id
+        in: query
+        name: updateId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated rate
+          schema:
+            $ref: '#/definitions/model.GetRateResponse'
+        "401":
+          description: Wrong parameters
+          schema:
+            type: string
+        "404":
+          description: Update not found
+          schema:
+            type: string
+      summary: Get exchange rate update
+      tags:
+      - exchange-rate-api
+  /api/rates/v1/update/last:
+    get:
+      consumes:
+      - application/json
+      description: Get exchange rate update. Returns rate and updateTime
+      parameters:
+      - description: From currency
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: To currency
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Last updated rate
+          schema:
+            $ref: '#/definitions/model.GetRateResponse'
+        "401":
+          description: Wrong parameters
+          schema:
+            type: string
+        "404":
+          description: No updates were performed
+          schema:
+            type: string
+      summary: Get last exchange rate update
+      tags:
+      - exchange-rate-api
+  /api/rates/v1/update/start:
+    post:
+      consumes:
+      - application/json
+      description: Start exchange rate update. Returns updateId, which can be used
+        in GetUpdateRate
+      parameters:
+      - description: From currency
+        in: body
+        name: from
+        required: true
+        schema:
+          type: string
+      - description: To currency
+        in: body
+        name: to
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update response
+          schema:
+            $ref: '#/definitions/model.StartUpdateRateResponse'
+      summary: Start exchange rate update
+      tags:
+      - exchange-rate-api
+swagger: "2.0"

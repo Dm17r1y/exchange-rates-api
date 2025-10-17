@@ -10,11 +10,26 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	_ "exchange-rates-service/src/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var serviceConfig = config.NewConfig()
 var rateService *service.RateService
 
+// StartUpdateRate godoc
+//
+//	@Summary		Start exchange rate update
+//	@Description	Start exchange rate update. Returns updateId, which can be used in GetUpdateRate
+//	@Tags			exchange-rate-api
+//	@Accept			json
+//	@Produce		json
+//	@Param			from	body		string							true	"From currency"
+//	@Param			to		body		string							true	"To currency"
+//	@Success		200		{object}	model.StartUpdateRateResponse	"Update response"
+//	@Router			/api/rates/v1/update/start [post]
 func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.NotFound(w, r)
@@ -48,6 +63,18 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetUpdateRate godoc
+//
+//	@Summary		Get exchange rate update
+//	@Description	Get the exchange rate update by updateId. Returns rate and updateTime. Both will be null if the update was not performed
+//	@Tags			exchange-rate-api
+//	@Accept			json
+//	@Produce		json
+//	@Param			updateId	query		string					true	"Update id"
+//	@Success		200			{object}	model.GetRateResponse	"Updated rate"
+//	@Failure		404			{string}	error					"Update not found"
+//	@Failure		401			{string}	error					"Wrong parameters"
+//	@Router			/api/rates/v1/update [get]
 func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.NotFound(w, r)
@@ -85,6 +112,19 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetLastUpdateRate godoc
+//
+//	@Summary		Get last exchange rate update
+//	@Description	Get exchange rate update. Returns rate and updateTime
+//	@Tags			exchange-rate-api
+//	@Accept			json
+//	@Produce		json
+//	@Param			from	query		string					true	"From currency"
+//	@Param			to		query		string					true	"To currency"
+//	@Success		200		{object}	model.GetRateResponse	"Last updated rate"
+//	@Failure		404		{string}	error					"No updates were performed"
+//	@Failure		401		{string}	error					"Wrong parameters"
+//	@Router			/api/rates/v1/update/last [get]
 func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.NotFound(w, r)
@@ -157,6 +197,8 @@ func main() {
 	http.HandleFunc("/api/rates/v1/update/start", startUpdateRate)
 	http.HandleFunc("/api/rates/v1/update", getUpdateRate)
 	http.HandleFunc("/api/rates/v1/update/last", getLastUpdateRate)
+
+	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	log.Println("Starting server at port 8080")
 	err = http.ListenAndServe(":8080", nil)

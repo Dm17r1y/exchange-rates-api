@@ -1,0 +1,167 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/rates/v1/update": {
+            "get": {
+                "description": "Get exchange rate update by id. Returns rate and updateTime",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchange-rate-api"
+                ],
+                "summary": "Get exchange rate update",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Update id",
+                        "name": "updateId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated rate",
+                        "schema": {
+                            "$ref": "#/definitions/model.GetRateResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong parameters",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Update not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/rates/v1/update/last": {
+            "get": {
+                "description": "Get exchange rate update. Returns rate and updateTime",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchange-rate-api"
+                ],
+                "summary": "Get last exchange rate update",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "From currency",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "To currency",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Last updated rate",
+                        "schema": {
+                            "$ref": "#/definitions/model.GetRateResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong parameters",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "No updates were performed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/rates/v1/update/start": {
+            "post": {
+                "description": "Start exchange rate update. Returns updateId, which can be used in GetUpdateRate",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchange-rate-api"
+                ],
+                "summary": "Start exchange rate update",
+                "parameters": [
+                    {
+                        "description": "From currency",
+                        "name": "from",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "To currency",
+                        "name": "to",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Update response",
+                        "schema": {
+                            "$ref": "#/definitions/model.StartUpdateRateResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.GetRateResponse": {
+            "type": "object",
+            "properties": {
+                "rate": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.StartUpdateRateResponse": {
+            "type": "object",
+            "properties": {
+                "updateId": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
