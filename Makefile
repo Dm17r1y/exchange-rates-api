@@ -19,7 +19,7 @@ migrate:
 
 .env.secret:
 	@if [ "$(API_KEY)" = "" ]; then \
-		echo "API_KEY is not set"; \
+		echo "make .env.secret: API_KEY is not set"; \
 		exit 1; \
 	fi
 	echo "EXCHANGE_RATES_IO_API_KEY=$(API_KEY)" > .env.secret
@@ -29,3 +29,5 @@ stop:
 
 clean:
 	rm .env.secret
+	docker rmi exchange-rates-service-api:latest
+	docker rmi exchange-rates-service-worker:latest
