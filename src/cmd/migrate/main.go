@@ -8,14 +8,14 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/golang-migrate/migrate/v4"
-    "github.com/golang-migrate/migrate/v4/database/postgres"
-    _ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
 	config := config.NewConfig()
 
-    db, err := sql.Open("postgres", config.PostgresConnectionString)
+	db, err := sql.Open("postgres", config.PostgresConnectionString)
 	if err != nil {
 		log.Fatalf("Error opening database: %s", err)
 	}

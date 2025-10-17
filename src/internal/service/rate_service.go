@@ -10,7 +10,7 @@ import (
 
 type RateService struct {
 	supportedCurrencies map[string]bool
-	repository *repository.ExchangeRateRepository
+	repository          *repository.ExchangeRateRepository
 }
 
 func NewRateService(config *config.Config) (*RateService, error) {

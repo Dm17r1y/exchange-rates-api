@@ -14,7 +14,7 @@ import (
 )
 
 type ExchangeRateRepository struct {
-	db *sql.DB
+	db            *sql.DB
 	rateStorage   *storage.ExchangeRateStorage
 	updateStorage *storage.ExchangeRateUpdateStorage
 }
@@ -25,7 +25,7 @@ func NewExchangeRateRepository(config *config.Config) (*ExchangeRateRepository, 
 		return nil, err
 	}
 	repository := ExchangeRateRepository{
-		db: db,
+		db:            db,
 		rateStorage:   storage.NewExchangeRateStorage(db),
 		updateStorage: storage.NewExchangeRateUpdateStorage(db),
 	}
@@ -59,7 +59,6 @@ func (r *ExchangeRateRepository) GetRateUpdate(updateId string) (model.ExchangeR
 	return rate, nil
 }
 
-
 func (r *ExchangeRateRepository) GetRatesForUpdate(fetchSize int) ([]model.ExchangeRateUpdateDbo, error) {
 	return r.updateStorage.GetRatesForUpdate(fetchSize)
 }
@@ -69,7 +68,7 @@ func (r *ExchangeRateRepository) SetUpdateError(updateId string) error {
 }
 
 func (r *ExchangeRateRepository) UpdateRate(updateId string, from string, to string, rate decimal.Decimal) error {
-	
+
 	tx, err := r.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
@@ -79,19 +78,19 @@ func (r *ExchangeRateRepository) UpdateRate(updateId string, from string, to str
 	updateTime := time.Now().UTC()
 
 	updateRateDbo := model.ExchangeRateUpdateDbo{
-		Id: updateId,
+		Id:           updateId,
 		FromCurrency: from,
-		ToCurrency: to,
-		Status: model.StatusDone,
-		UpdateTime: &updateTime,
-		RateValue: &rate,
+		ToCurrency:   to,
+		Status:       model.StatusDone,
+		UpdateTime:   &updateTime,
+		RateValue:    &rate,
 	}
 
 	rateDbo := model.ExchangeRateDbo{
 		FromCurrency: from,
-		ToCurrency: to,
-		RateValue: &rate,
-		UpdateTime: &updateTime,
+		ToCurrency:   to,
+		RateValue:    &rate,
+		UpdateTime:   &updateTime,
 	}
 
 	if err := r.updateStorage.UpdateRateTx(tx, &updateRateDbo); err != nil {
@@ -104,7 +103,6 @@ func (r *ExchangeRateRepository) UpdateRate(updateId string, from string, to str
 
 	return tx.Commit()
 }
-
 
 func (r *ExchangeRateRepository) GetLastRate(from string, to string) (model.ExchangeRate, error) {
 	rate, err := r.rateStorage.GetRate(from, to)
@@ -124,4 +122,3 @@ func (r *ExchangeRateRepository) GetLastRate(from string, to string) (model.Exch
 
 	return resultRate, nil
 }
-

@@ -17,7 +17,6 @@ func NewExchangeRateStorage(db *sql.DB) *ExchangeRateStorage {
 	return &ExchangeRateStorage{db: db}
 }
 
-
 const getRateSql = `
 SELECT rate_value, update_time FROM exchange_rate
 WHERE from_currency = $1 AND to_currency = $2

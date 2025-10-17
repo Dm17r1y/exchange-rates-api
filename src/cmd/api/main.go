@@ -15,7 +15,6 @@ import (
 var serviceConfig = config.NewConfig()
 var rateService *service.RateService
 
-
 func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.NotFound(w, r)
@@ -86,7 +85,6 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.NotFound(w, r)
@@ -105,7 +103,6 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 		handleError(w, internal.NewBadRequestError("to currency is not set"))
 		return
 	}
-
 
 	rate, err := rateService.GetLastRate(from, to)
 
@@ -137,15 +134,15 @@ func handleError(w http.ResponseWriter, err error) {
 	if err == nil {
 		return
 	}
-	
-	serviceError := &internal.ServiceError{} 
+
+	serviceError := &internal.ServiceError{}
 	if errors.As(err, &serviceError) {
 		http.Error(w, serviceError.ErrorMessage, int(serviceError.ErrorType))
 		return
 	}
 
 	log.Println(err)
-	http.Error(w, "Internal server error", http.StatusInternalServerError)	
+	http.Error(w, "Internal server error", http.StatusInternalServerError)
 
 }
 

@@ -11,9 +11,9 @@ import (
 
 type Config struct {
 	PostgresConnectionString string
-	ExchangeIoApiKey string
-	WorkerFetchSize int
-	WorkerTickInterval time.Duration
+	ExchangeIoApiKey         string
+	WorkerFetchSize          int
+	WorkerTickInterval       time.Duration
 }
 
 func NewConfig() *Config {
@@ -44,9 +44,9 @@ func NewConfig() *Config {
 
 	config := Config{
 		PostgresConnectionString: postgresConnectionString,
-		WorkerFetchSize: workerFetchSize,
-		WorkerTickInterval: time.Duration(WorkerTickInterval) * time.Millisecond,
-		ExchangeIoApiKey: exchangeRatesApiKey,
+		WorkerFetchSize:          workerFetchSize,
+		WorkerTickInterval:       time.Duration(WorkerTickInterval) * time.Millisecond,
+		ExchangeIoApiKey:         exchangeRatesApiKey,
 	}
 
 	return &config
