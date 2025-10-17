@@ -38,6 +38,10 @@ func (service *RateService) StartUpdateRate(from string, to string) (string, err
 		return "", internal.NewBadRequestError(fmt.Sprintf("currency %s not supported", to))
 	}
 
+	if from == to {
+		return "", internal.NewBadRequestError(fmt.Sprintf("trying to convert same currency: %s to %s", from, to))
+	}
+
 	return service.repository.GetOrCreateRateUpdate(from, to)
 }
 
@@ -52,6 +56,10 @@ func (service *RateService) GetLastRate(from string, to string) (model.ExchangeR
 
 	if _, ok := service.supportedCurrencies[to]; !ok {
 		return model.ExchangeRate{}, internal.NewBadRequestError(fmt.Sprintf("currency %s not supported", to))
+	}
+
+	if from == to {
+		return model.ExchangeRate{}, internal.NewBadRequestError(fmt.Sprintf("trying to get same currency rate: %s to %s", from, to))
 	}
 
 	return service.repository.GetLastRate(from, to)

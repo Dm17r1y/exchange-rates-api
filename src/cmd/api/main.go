@@ -27,7 +27,7 @@ var rateService *service.RateService
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		model.StartUpdateRateRequest	true	"Update request"
-//	@Success		200		{object}	model.StartUpdateRateResponse	"Update response"
+//	@Success		200		{object}	model.StartUpdateRateResponse	"OK"
 //	@Router			/api/rates/v1/update/start [post]
 func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -70,9 +70,9 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			updateId	query		string					true	"Update id"
-//	@Success		200			{object}	model.GetRateResponse	"Updated rate"
-//	@Failure		404			{string}	error					"Update not found"
-//	@Failure		401			{string}	error					"Wrong parameters"
+//	@Success		200			{object}	model.GetRateResponse	"OK"
+//	@Failure		404			{string}	error					"NotFound"
+//	@Failure		401			{string}	error					"BadRequest"
 //	@Router			/api/rates/v1/update [get]
 func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -120,9 +120,9 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Param			from	query		string					true	"From currency"
 //	@Param			to		query		string					true	"To currency"
-//	@Success		200		{object}	model.GetRateResponse	"Last updated rate"
-//	@Failure		404		{string}	error					"No updates were performed"
-//	@Failure		401		{string}	error					"Wrong parameters"
+//	@Success		200		{object}	model.GetRateResponse	"OK"
+//	@Failure		404		{string}	error					"NotFound"
+//	@Failure		401		{string}	error					"BadRequest"
 //	@Router			/api/rates/v1/update/last [get]
 func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
