@@ -26,8 +26,7 @@ var rateService *service.RateService
 //	@Tags			exchange-rate-api
 //	@Accept			json
 //	@Produce		json
-//	@Param			from	body		string							true	"From currency"
-//	@Param			to		body		string							true	"To currency"
+//	@Param			request	body		model.StartUpdateRateRequest	true	"Update request"
 //	@Success		200		{object}	model.StartUpdateRateResponse	"Update response"
 //	@Router			/api/rates/v1/update/start [post]
 func startUpdateRate(w http.ResponseWriter, r *http.Request) {

@@ -114,21 +114,12 @@
                 "summary": "Start exchange rate update",
                 "parameters": [
                     {
-                        "description": "From currency",
-                        "name": "from",
+                        "description": "Update request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "To currency",
-                        "name": "to",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/model.StartUpdateRateRequest"
                         }
                     }
                 ],
@@ -151,6 +142,17 @@
                     "type": "string"
                 },
                 "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.StartUpdateRateRequest": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "to": {
                     "type": "string"
                 }
             }

@@ -6,6 +6,13 @@ definitions:
       updateTime:
         type: string
     type: object
+  model.StartUpdateRateRequest:
+    properties:
+      from:
+        type: string
+      to:
+        type: string
+    type: object
   model.StartUpdateRateResponse:
     properties:
       updateId:
@@ -85,18 +92,12 @@ paths:
       description: Start exchange rate update. Returns updateId, which can be used
         in GetUpdateRate
       parameters:
-      - description: From currency
+      - description: Update request
         in: body
-        name: from
+        name: request
         required: true
         schema:
-          type: string
-      - description: To currency
-        in: body
-        name: to
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/model.StartUpdateRateRequest'
       produces:
       - application/json
       responses:

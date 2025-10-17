@@ -21,9 +21,15 @@ services:
       POSTGRES_CONNECTION_STRING: postgresql://user:password@postgres:5432/exchange_rates?sslmode=disable
     ports:
       - 8080:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   exchange-rates-service-worker:
     image: exchange-rates-service-worker:latest
     container_name: exchange-rates-service-worker
     environment:
       POSTGRES_CONNECTION_STRING: postgresql://user:password@postgres:5432/exchange_rates?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy

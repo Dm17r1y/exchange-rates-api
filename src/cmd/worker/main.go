@@ -23,12 +23,16 @@ func main() {
 	for {
 		<-ticker.C
 
-		updated, err := rateServiceWorker.ExecuteUpdate()
-		if err != nil {
-			log.Println(err)
-		}
+		for {
+			updated, err := rateServiceWorker.ExecuteUpdate()
+			if err != nil {
+				log.Println(err)
+			}
 
-		if updated > 0 {
+			if updated == 0 {
+				break
+			}
+
 			log.Printf("Updated %d rates", updated)
 		}
 	}
