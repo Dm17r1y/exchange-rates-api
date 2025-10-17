@@ -72,7 +72,7 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 //	@Param			updateId	query		string					true	"Update id"
 //	@Success		200			{object}	model.GetRateResponse	"OK"
 //	@Failure		404			{string}	error					"NotFound"
-//	@Failure		401			{string}	error					"BadRequest"
+//	@Failure		400			{string}	error					"BadRequest"
 //	@Router			/api/rates/v1/update [get]
 func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -122,7 +122,7 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 //	@Param			to		query		string					true	"To currency"
 //	@Success		200		{object}	model.GetRateResponse	"OK"
 //	@Failure		404		{string}	error					"NotFound"
-//	@Failure		401		{string}	error					"BadRequest"
+//	@Failure		400		{string}	error					"BadRequest"
 //	@Router			/api/rates/v1/update/last [get]
 func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {

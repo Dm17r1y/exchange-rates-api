@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"exchange-rates-service/src/internal"
 	"exchange-rates-service/src/internal/model"
-
-	_ "github.com/lib/pq"
 )
 
 type ExchangeRateUpdateStorage struct {

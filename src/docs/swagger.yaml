@@ -37,15 +37,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: Updated rate
+          description: OK
           schema:
             $ref: '#/definitions/model.GetRateResponse'
-        "401":
-          description: Wrong parameters
+        "400":
+          description: BadRequest
           schema:
             type: string
         "404":
-          description: Update not found
+          description: NotFound
           schema:
             type: string
       summary: Get exchange rate update
@@ -71,15 +71,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: Last updated rate
+          description: OK
           schema:
             $ref: '#/definitions/model.GetRateResponse'
-        "401":
-          description: Wrong parameters
+        "400":
+          description: BadRequest
           schema:
             type: string
         "404":
-          description: No updates were performed
+          description: NotFound
           schema:
             type: string
       summary: Get last exchange rate update
@@ -102,7 +102,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Update response
+          description: OK
           schema:
             $ref: '#/definitions/model.StartUpdateRateResponse'
       summary: Start exchange rate update
