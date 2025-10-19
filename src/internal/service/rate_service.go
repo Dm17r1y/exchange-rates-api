@@ -1,10 +1,12 @@
 package service
 
 import (
+	"database/sql"
 	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal"
 	"exchange-rates-service/src/internal/model"
 	"exchange-rates-service/src/internal/repository"
+	"exchange-rates-service/src/internal/storage"
 	"fmt"
 )
 
@@ -14,10 +16,15 @@ type RateService struct {
 }
 
 func NewRateService(config *config.Config) (*RateService, error) {
-	r, err := repository.NewExchangeRateRepository(config)
+	db, err := sql.Open("postgres", config.PostgresConnectionString)
 	if err != nil {
 		return nil, err
 	}
+
+	exchangeRateStorage := storage.NewExchangeRateStorage(db)
+	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
+
+	r := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
 
 	return &RateService{
 		supportedCurrencies: map[string]bool{

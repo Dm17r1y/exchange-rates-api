@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"database/sql"
 	"exchange-rates-service/src/internal/model"
 	"regexp"
 	"testing"
@@ -8,16 +9,12 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetOrCreateRateUpdate_ShouldSuccess(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	storage := NewExchangeRateUpdateStorage(db)
+	storage, _, mock := createUpdateMockStorage(t)
 
 	updateId, from, to := "test-update-id", "USD", "EUR"
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(updateId)
@@ -29,34 +26,18 @@ func TestGetOrCreateRateUpdate_ShouldSuccess(t *testing.T) {
 
 	update, err := storage.GetOrCreateRateUpdate(updateId, from, to)
 
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if update.Id != updateId {
-		t.Fatalf("update id: expected %s but got %s", updateId, update.Id)
-	}
-	if update.FromCurrency != from {
-		t.Fatalf("from currency: expected %s but got %s", from, update.FromCurrency)
-	}
-	if update.ToCurrency != to {
-		t.Fatalf("to currency: expected %s but got %s", to, update.ToCurrency)
-	}
-	if update.Status != model.StatusUpdating {
-		t.Fatalf("status: expected %v but got %v", model.StatusUpdating, update.Status)
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %s", err)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, updateId, update.Id)
+	assert.Equal(t, from, update.FromCurrency)
+	assert.Equal(t, to, update.ToCurrency)
+	assert.Equal(t, model.StatusUpdating, update.Status)
+
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
 }
 
 func TestGetRateUpdate_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	storage := NewExchangeRateUpdateStorage(db)
+	storage, _, mock := createUpdateMockStorage(t)
 
 	updateId, from, to := "test-update-id", "USD", "EUR"
 	rateValue := decimal.NewFromFloat(1.2345)
@@ -73,40 +54,20 @@ func TestGetRateUpdate_Success(t *testing.T) {
 
 	update, err := storage.GetRateUpdate(updateId)
 
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if update.Id != updateId {
-		t.Fatalf("update id: expected %s but got %s", updateId, update.Id)
-	}
-	if update.FromCurrency != from {
-		t.Fatalf("from currency: expected %s but got %s", from, update.FromCurrency)
-	}
-	if update.ToCurrency != to {
-		t.Fatalf("to currency: expected %s but got %s", to, update.ToCurrency)
-	}
-	if update.Status != status {
-		t.Fatalf("status: expected %v but got %v", status, update.Status)
-	}
-	if !update.RateValue.Equal(rateValue) {
-		t.Fatalf("rate value: expected %v but got %v", rateValue, update.RateValue)
-	}
-	if !update.UpdateTime.Equal(updateTime) {
-		t.Fatalf("update time: expected %v but got %v", updateTime, update.UpdateTime)
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %s", err)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, updateId, update.Id)
+	assert.Equal(t, from, update.FromCurrency)
+	assert.Equal(t, to, update.ToCurrency)
+	assert.Equal(t, status, update.Status)
+	assert.Equal(t, &rateValue, update.RateValue)
+	assert.Equal(t, &updateTime, update.UpdateTime)
+
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
 }
 
 func TestGetRateUpdate_NotFound(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	storage := NewExchangeRateUpdateStorage(db)
+	storage, _, mock := createUpdateMockStorage(t)
 
 	updateId := "non-existent-id"
 	rows := sqlmock.NewRows([]string{"from_currency", "to_currency", "status", "rate_value", "update_time"})
@@ -118,12 +79,11 @@ func TestGetRateUpdate_NotFound(t *testing.T) {
 
 	update, err := storage.GetRateUpdate(updateId)
 
-	if update != nil || err == nil {
-		t.Fatalf("expected not found error, got update=%v err=%v", update, err)
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %v", err)
-	}
+	assert.Nil(t, update)
+	assert.NotNil(t, err)
+
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
 }
 
 func TestGetRatesForUpdate_Success(t *testing.T) {
@@ -147,40 +107,22 @@ func TestGetRatesForUpdate_Success(t *testing.T) {
 		WillReturnRows(rows)
 
 	updates, err := storage.GetRatesForUpdate(fetchSize)
+	assert.Nil(t, err)
+	assert.Len(t, updates, 3)
+	assert.Equal(t, updates[0], model.ExchangeRateUpdateDbo{Id: "update-1", FromCurrency: "USD", ToCurrency: "EUR"})
+	assert.Equal(t, updates[1], model.ExchangeRateUpdateDbo{Id: "update-2", FromCurrency: "EUR", ToCurrency: "USD"})
+	assert.Equal(t, updates[2], model.ExchangeRateUpdateDbo{Id: "update-3", FromCurrency: "EUR", ToCurrency: "MXN"})
 
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if len(updates) != 3 {
-		t.Fatalf("expected 3 updates but got %d", len(updates))
-	}
-	if updates[0].Id != "update-1" || updates[0].FromCurrency != "USD" || updates[0].ToCurrency != "EUR" {
-		t.Fatalf("unexpected first update: %v", updates[0])
-	}
-	if updates[1].Id != "update-2" || updates[1].FromCurrency != "EUR" || updates[1].ToCurrency != "USD" {
-		t.Fatalf("unexpected second update: %v", updates[1])
-	}
-	if updates[2].Id != "update-3" || updates[2].FromCurrency != "EUR" || updates[2].ToCurrency != "MXN" {
-		t.Fatalf("unexpected third update: %v", updates[2])
-	}
 	for _, update := range updates {
-		if update.Status != model.StatusUpdating {
-			t.Fatalf("expected status %v but got %v", model.StatusUpdating, update.Status)
-		}
+		assert.Equal(t, model.StatusUpdating, update.Status)
 	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %s", err)
-	}
+
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
 }
 
 func TestGetRatesForUpdate_EmptyResult(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	storage := NewExchangeRateUpdateStorage(db)
+	storage, _, mock := createUpdateMockStorage(t)
 
 	fetchSize := 10
 	rows := sqlmock.NewRows([]string{"id", "from_currency", "to_currency"})
@@ -192,30 +134,18 @@ func TestGetRatesForUpdate_EmptyResult(t *testing.T) {
 
 	updates, err := storage.GetRatesForUpdate(fetchSize)
 
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if len(updates) != 0 {
-		t.Fatalf("expected empty result but got %d updates", len(updates))
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %s", err)
-	}
+	assert.Nil(t, err)
+	assert.Len(t, updates, 0)
+	
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
 }
 
 func TestUpdateRateTx_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
+	storage, db, mock := createUpdateMockStorage(t)
 
-	storage := NewExchangeRateUpdateStorage(db)
-
-	updateId := "test-update-id"
-	rateValue := decimal.NewFromFloat(1.2345)
-	updateTime := time.Now()
-	status := model.StatusDone
+	updateId, rateValue := "test-update-id", decimal.NewFromFloat(1.2345)
+	updateTime, status := time.Now(), model.StatusDone
 
 	updateDbo := model.ExchangeRateUpdateDbo{
 		Id:         updateId,
@@ -232,30 +162,20 @@ func TestUpdateRateTx_Success(t *testing.T) {
 	mock.ExpectCommit()
 
 	tx, err := db.Begin()
-	if err != nil {
-		t.Fatalf("failed to begin transaction: %v", err)
-	}
+	require.Nil(t, err)
 
-	if err := storage.UpdateRateTx(tx, &updateDbo); err != nil {
-		t.Fatalf("error on UpdateRateTx: %v", err)
-	}
-	if err := tx.Commit(); err != nil {
-		t.Fatalf("error on commit: %v", err)
-	}
+	err = storage.UpdateRateTx(tx, &updateDbo)
+	require.Nil(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %v", err)
-	}
+	err = tx.Commit()
+	require.Nil(t, err)
+
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
 }
 
 func TestSetError_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	storage := NewExchangeRateUpdateStorage(db)
+	storage, _, mock := createUpdateMockStorage(t)
 
 	updateId := "test-update-id"
 
@@ -264,12 +184,19 @@ func TestSetError_Success(t *testing.T) {
 		WithArgs(updateId).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	err = storage.SetError(updateId)
+	err := storage.SetError(updateId)
 
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %s", err)
-	}
+	assert.Nil(t, err)
+
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
+}
+
+
+func createUpdateMockStorage(t *testing.T) (ExchangeRateUpdateStorage, *sql.DB, sqlmock.Sqlmock) {
+	db, mock, err := sqlmock.New()
+	require.Nil(t, err)
+
+	storage := NewExchangeRateUpdateStorage(db)
+	return storage, db, mock
 }

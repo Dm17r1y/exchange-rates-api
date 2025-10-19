@@ -7,20 +7,26 @@ import (
 	"exchange-rates-service/src/internal/model"
 )
 
-type ExchangeRateStorage struct {
+type SqlExchangeRateStorage struct {
 	db *sql.DB
 }
 
-func NewExchangeRateStorage(db *sql.DB) *ExchangeRateStorage {
-	return &ExchangeRateStorage{db: db}
+type ExchangeRateStorage interface {
+	GetRate(from string, to string) (*model.ExchangeRateDbo, error)
+	SetRateTx(tx *sql.Tx, model *model.ExchangeRateDbo) error
 }
+
+func NewExchangeRateStorage(db *sql.DB) ExchangeRateStorage {
+	return &SqlExchangeRateStorage{db: db}
+}
+
 
 const getRateSql = `
 SELECT rate_value, update_time FROM exchange_rate
 WHERE from_currency = $1 AND to_currency = $2
 `
 
-func (storage *ExchangeRateStorage) GetRate(from string, to string) (*model.ExchangeRateDbo, error) {
+func (storage *SqlExchangeRateStorage) GetRate(from string, to string) (*model.ExchangeRateDbo, error) {
 	stmt, err := storage.db.PrepareContext(context.Background(), getRateSql)
 	if err != nil {
 		return nil, err
@@ -53,7 +59,7 @@ ON CONFLICT(from_currency, to_currency)
 DO UPDATE SET rate_value = $3, update_time = $4
 `
 
-func (storage *ExchangeRateStorage) SetRateTx(tx *sql.Tx, model *model.ExchangeRateDbo) error {
+func (storage *SqlExchangeRateStorage) SetRateTx(tx *sql.Tx, model *model.ExchangeRateDbo) error {
 	stmt, err := tx.PrepareContext(context.Background(), setRateSql)
 	if err != nil {
 		return err

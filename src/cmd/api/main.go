@@ -93,7 +93,7 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if update.UpdateDateTime == nil {
-		err = json.NewEncoder(w).Encode(model.GetRateResponse{})
+		err = json.NewEncoder(w).Encode(update)
 		handleError(w, err)
 		return
 	}

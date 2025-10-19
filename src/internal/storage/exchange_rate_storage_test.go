@@ -5,19 +5,16 @@ import (
 	"regexp"
 	"testing"
 	"time"
+	"database/sql"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetRate_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	storage := NewExchangeRateStorage(db)
+	storage, _, mock := createRateMockStorage(t)
 
 	from, to, rateValue, updateTime := "USD", "EUR", "12345", time.Now()
 	rows := sqlmock.NewRows([]string{"rate_value", "update_time"}).AddRow(rateValue, updateTime)
@@ -29,34 +26,20 @@ func TestGetRate_Success(t *testing.T) {
 
 	rate, err := storage.GetRate(from, to)
 
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if rate.FromCurrency != from {
-		t.Fatalf("from currency: expected %s but got %s", from, rate.FromCurrency)
-	}
-	if rate.ToCurrency != to {
-		t.Fatalf("to currency: expected %s but got %s", to, rate.ToCurrency)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, from, rate.FromCurrency)
+	assert.Equal(t, to, rate.ToCurrency)
+
 	expectedRateValue, _ := decimal.NewFromString(rateValue)
-	if !rate.RateValue.Equal(expectedRateValue) {
-		t.Fatalf("rate value: expected %v but got %v", expectedRateValue, rate.RateValue)
-	}
-	if !rate.UpdateTime.Equal(updateTime) {
-		t.Fatalf("update time: expected %v but got %v", updateTime, rate.UpdateTime)
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %s", err)
-	}
+	assert.Equal(t, &expectedRateValue, rate.RateValue)
+	assert.Equal(t, &updateTime, rate.UpdateTime)
+
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
 }
 
 func TestGetRate_NotFound(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-	storage := NewExchangeRateStorage(db)
+	storage, _, mock := createRateMockStorage(t)
 
 	from, to := "USD", "EUR"
 	rows := sqlmock.NewRows([]string{"rate_value", "update_time"})
@@ -67,25 +50,17 @@ func TestGetRate_NotFound(t *testing.T) {
 		WillReturnRows(rows)
 
 	rate, err := storage.GetRate(from, to)
-	if rate != nil || err == nil {
-		t.Fatalf("expected not found error, got rate=%v err=%v", rate, err)
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %v", err)
-	}
+	assert.Nil(t, rate)
+	assert.NotNil(t, err)
+
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
 }
 
 func SetRateTx_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	storage := NewExchangeRateStorage(db)
-
+	storage, db, mock := createRateMockStorage(t)
 	rateValue, updateTime := decimal.NewFromFloat(123.45), time.Now()
-	
+
 	dbo := model.ExchangeRateDbo{
 		FromCurrency: "USD",
 		ToCurrency:   "EUR",
@@ -101,18 +76,23 @@ func SetRateTx_Success(t *testing.T) {
 	mock.ExpectCommit()
 
 	tx, err := db.Begin()
-	if err != nil {
-		t.Fatalf("failed to begin transaction: %v", err)
-	}
+	require.Nil(t, err)
 
-	if err := storage.SetRateTx(tx, &dbo); err != nil {
-		t.Fatalf("error on SetRateTx: %v", err)
-	}
-	if err := tx.Commit(); err != nil {
-		t.Fatalf("error on commit: %v", err)
-	}
+	err = storage.SetRateTx(tx, &dbo)
+	require.Nil(t, err)
+	
+	err = tx.Commit()
+	require.Nil(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet expectations: %v", err)
-	}
+	err = mock.ExpectationsWereMet()
+	assert.Nil(t, err)
+}
+
+
+func createRateMockStorage(t *testing.T) (ExchangeRateStorage, *sql.DB, sqlmock.Sqlmock) {
+	db, mock, err := sqlmock.New()
+	require.Nil(t, err)
+
+	storage := NewExchangeRateStorage(db)
+	return storage, db, mock
 }

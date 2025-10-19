@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal/model"
 	"exchange-rates-service/src/internal/storage"
 
@@ -15,21 +14,20 @@ import (
 
 type ExchangeRateRepository struct {
 	db            *sql.DB
-	rateStorage   *storage.ExchangeRateStorage
-	updateStorage *storage.ExchangeRateUpdateStorage
+	rateStorage   storage.ExchangeRateStorage
+	updateStorage storage.ExchangeRateUpdateStorage
 }
 
-func NewExchangeRateRepository(config *config.Config) (*ExchangeRateRepository, error) {
-	db, err := sql.Open("postgres", config.PostgresConnectionString)
-	if err != nil {
-		return nil, err
-	}
+func NewExchangeRateRepository(
+	db *sql.DB, 
+	rateStorage storage.ExchangeRateStorage, 
+	rateUpdateStorage storage.ExchangeRateUpdateStorage) *ExchangeRateRepository {
 	repository := ExchangeRateRepository{
 		db:            db,
-		rateStorage:   storage.NewExchangeRateStorage(db),
-		updateStorage: storage.NewExchangeRateUpdateStorage(db),
+		rateStorage:   rateStorage,
+		updateStorage: rateUpdateStorage,
 	}
-	return &repository, nil
+	return &repository
 }
 
 func (r *ExchangeRateRepository) GetOrCreateRateUpdate(from string, to string) (string, error) {
