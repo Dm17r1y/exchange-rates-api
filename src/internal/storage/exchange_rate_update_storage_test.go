@@ -133,7 +133,7 @@ func TestGetRatesForUpdate_EmptyResult(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, updates, 0)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -185,7 +185,6 @@ func TestSetError_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
-
 
 func createUpdateMockStorage(t *testing.T) (ExchangeRateUpdateStorage, *sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()

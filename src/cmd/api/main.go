@@ -15,6 +15,7 @@ import (
 	"time"
 
 	_ "exchange-rates-service/src/docs"
+
 	_ "github.com/lib/pq"
 
 	httpSwagger "github.com/swaggo/http-swagger"

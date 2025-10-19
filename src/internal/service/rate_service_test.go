@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/shopspring/decimal"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type mockRepository struct {
@@ -50,7 +50,7 @@ func TestStartUpdateRate_ThrowsErrorWhenUnknownCurrency(t *testing.T) {
 	updateId, err := service.StartUpdateRate("UNKNOWN", "USD")
 	assert.Equal(t, updateId, "")
 	assert.Error(t, err)
-	assert.Equal(t, err.(*internal.ServiceError).ErrorType, internal.BadRequest)	
+	assert.Equal(t, err.(*internal.ServiceError).ErrorType, internal.BadRequest)
 }
 
 func TestStartUpdateRate_ThrowsErrorOnConvertingSameCurrency(t *testing.T) {
@@ -59,7 +59,7 @@ func TestStartUpdateRate_ThrowsErrorOnConvertingSameCurrency(t *testing.T) {
 	updateId, err := service.StartUpdateRate("USD", "USD")
 	assert.Equal(t, updateId, "")
 	assert.Error(t, err)
-	assert.Equal(t, err.(*internal.ServiceError).ErrorType, internal.BadRequest)	
+	assert.Equal(t, err.(*internal.ServiceError).ErrorType, internal.BadRequest)
 }
 
 func TestGetLastRate_ThrowsErrorWhenUnknownCurrency(t *testing.T) {
@@ -67,7 +67,7 @@ func TestGetLastRate_ThrowsErrorWhenUnknownCurrency(t *testing.T) {
 
 	_, err := service.GetLastRate("UNKNOWN", "USD")
 	assert.Error(t, err)
-	assert.Equal(t, err.(*internal.ServiceError).ErrorType, internal.BadRequest)	
+	assert.Equal(t, err.(*internal.ServiceError).ErrorType, internal.BadRequest)
 }
 
 func TestGetLastRate_ThrowsErrorOnConvertingSameCurrency(t *testing.T) {
@@ -75,7 +75,7 @@ func TestGetLastRate_ThrowsErrorOnConvertingSameCurrency(t *testing.T) {
 
 	_, err := service.GetLastRate("EUR", "EUR")
 	assert.Error(t, err)
-	assert.Equal(t, err.(*internal.ServiceError).ErrorType, internal.BadRequest)	
+	assert.Equal(t, err.(*internal.ServiceError).ErrorType, internal.BadRequest)
 }
 
 func createMockService() *RateService {

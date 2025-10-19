@@ -1,11 +1,11 @@
 package storage
 
 import (
+	"database/sql"
 	"exchange-rates-service/src/internal/model"
 	"regexp"
 	"testing"
 	"time"
-	"database/sql"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/shopspring/decimal"
@@ -78,14 +78,13 @@ func SetRateTx_Success(t *testing.T) {
 
 	err = storage.SetRateTx(tx, &dbo)
 	require.NoError(t, err)
-	
+
 	err = tx.Commit()
 	require.NoError(t, err)
 
 	err = mock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
-
 
 func createRateMockStorage(t *testing.T) (ExchangeRateStorage, *sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()

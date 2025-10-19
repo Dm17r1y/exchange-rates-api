@@ -10,7 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type ExchangeRateApiClient interface{
+type ExchangeRateApiClient interface {
 	GetRate(from string, to string) (decimal.Decimal, error)
 }
 
