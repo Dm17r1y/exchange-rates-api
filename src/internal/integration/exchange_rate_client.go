@@ -30,7 +30,7 @@ type ExchangeRateApiResponse struct {
 func NewExchangeRateApiClient(config *config.Config) ExchangeRateApiClient {
 	return &ExchangeRateClient{
 		config: config,
-		client:  &http.Client{
+		client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
 	}

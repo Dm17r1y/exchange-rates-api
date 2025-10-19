@@ -1,6 +1,7 @@
 # Exchange service api
 
-Api for monitoring currency exchange rates 
+Api for monitoring currency exchange rates. Supports EUR, USD and MXN currencies
+
 ### Start service
 
 #### Prerequisites

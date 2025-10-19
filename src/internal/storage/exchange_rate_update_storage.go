@@ -26,7 +26,7 @@ func NewExchangeRateUpdateStorage(db *sql.DB) ExchangeRateUpdateStorage {
 const getOrCreateRateUpdateSql = `
 WITH new_update AS (
 	MERGE INTO exchange_rate_update
-	USING (VALUES ($1, $2, $3, $4)) AS update(id, from_currency, to_currency, status)
+	USING (VALUES ($1, $2, $3, $4::integer)) AS update(id, from_currency, to_currency, status)
 	ON exchange_rate_update.from_currency = update.from_currency 
 		AND exchange_rate_update.to_currency = update.to_currency 
 		AND exchange_rate_update.status = update.status
@@ -160,6 +160,6 @@ func (storage *SqlExchangeRateUpdateStorage) SetError(updateId string) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(context.Background(), updateId, model.StatusError)
+	_, err = stmt.ExecContext(context.Background(), updateId, int(model.StatusError))
 	return err
 }

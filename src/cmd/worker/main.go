@@ -9,6 +9,8 @@ import (
 	"exchange-rates-service/src/internal/storage"
 	"log"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
