@@ -5,6 +5,7 @@ import (
 	"errors"
 	"exchange-rates-service/src/config"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -55,7 +56,12 @@ func (c *ExchangeRateClient) GetRate(from string, to string) (decimal.Decimal, e
 	}
 
 	if !response.Success {
-		return decimal.Decimal{}, errors.New("error executing request")
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return decimal.Decimal{}, err
+		}
+		
+		return decimal.Decimal{}, errors.New(string(bodyBytes))
 	}
 
 	rate, ok := response.Rates[to]
