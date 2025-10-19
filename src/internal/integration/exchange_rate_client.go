@@ -10,7 +10,11 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type ExchangeRateApiClient struct {
+type ExchangeRateApiClient interface{
+	GetRate(from string, to string) (decimal.Decimal, error)
+}
+
+type ExchangeRateClient struct {
 	config *config.Config
 }
 
@@ -21,15 +25,15 @@ type ExchangeRateApiResponse struct {
 	Rates     map[string]decimal.Decimal `json:"rates"`
 }
 
-func NewExchangeRateIoClient(config *config.Config) *ExchangeRateApiClient {
-	return &ExchangeRateApiClient{
+func NewExchangeRateApiClient(config *config.Config) ExchangeRateApiClient {
+	return &ExchangeRateClient{
 		config: config,
 	}
 }
 
 const apiBaseUrl = "https://api.exchangeratesapi.io"
 
-func (c *ExchangeRateApiClient) GetRate(from string, to string) (decimal.Decimal, error) {
+func (c *ExchangeRateClient) GetRate(from string, to string) (decimal.Decimal, error) {
 	apiKey := c.config.ExchangeIoApiKey
 	fullUrl := fmt.Sprintf("%s/v1/latest?access_key=%s&base=%s&symbols=%s", apiBaseUrl, apiKey, from, to)
 

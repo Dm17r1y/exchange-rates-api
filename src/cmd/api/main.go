@@ -1,22 +1,25 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal"
 	"exchange-rates-service/src/internal/model"
+	"exchange-rates-service/src/internal/repository"
 	"exchange-rates-service/src/internal/service"
+	"exchange-rates-service/src/internal/storage"
 	"log"
 	"net/http"
 	"time"
 
 	_ "exchange-rates-service/src/docs"
+	_ "github.com/lib/pq"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-var serviceConfig = config.NewConfig()
 var rateService *service.RateService
 
 // StartUpdateRate godoc
@@ -186,12 +189,16 @@ func handleError(w http.ResponseWriter, err error) {
 }
 
 func main() {
-	var err error
-
-	rateService, err = service.NewRateService(serviceConfig)
+	serviceConfig := config.NewConfig()
+	db, err := sql.Open("postgres", serviceConfig.PostgresConnectionString)
 	if err != nil {
 		panic(err)
 	}
+
+	exchangeRateStorage := storage.NewExchangeRateStorage(db)
+	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
+	repo := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
+	rateService = service.NewRateService(repo)
 
 	http.HandleFunc("/api/rates/v1/update/start", startUpdateRate)
 	http.HandleFunc("/api/rates/v1/update", getUpdateRate)

@@ -1,38 +1,27 @@
 package service
 
 import (
-	"database/sql"
 	"exchange-rates-service/src/config"
 	"exchange-rates-service/src/internal/integration"
 	"exchange-rates-service/src/internal/repository"
-	"exchange-rates-service/src/internal/storage"
 	"log"
 )
 
 type RateServiceWorker struct {
 	config     *config.Config
-	repository *repository.ExchangeRateRepository
-	client     *integration.ExchangeRateApiClient
+	repository repository.ExchangeRateRepository
+	client     integration.ExchangeRateApiClient
 }
 
-func NewRateServiceWorker(config *config.Config) (*RateServiceWorker, error) {
-	db, err := sql.Open("postgres", config.PostgresConnectionString)
-	if err != nil {
-		return nil, err
-	}
-
-	exchangeRateStorage := storage.NewExchangeRateStorage(db)
-	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
-
-	r := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
+func NewRateServiceWorker(config *config.Config, repo repository.ExchangeRateRepository, client integration.ExchangeRateApiClient) *RateServiceWorker {
 
 	serviceWorker := RateServiceWorker{
 		config:     config,
-		repository: r,
-		client:     integration.NewExchangeRateIoClient(config),
+		repository: repo,
+		client:     integration.NewExchangeRateApiClient(config),
 	}
 
-	return &serviceWorker, nil
+	return &serviceWorker
 }
 
 func (s *RateServiceWorker) ExecuteUpdate() (int, error) {

@@ -1,24 +1,31 @@
 package main
 
 import (
+	"database/sql"
 	"exchange-rates-service/src/config"
+	"exchange-rates-service/src/internal/integration"
+	"exchange-rates-service/src/internal/repository"
 	"exchange-rates-service/src/internal/service"
+	"exchange-rates-service/src/internal/storage"
 	"log"
 	"time"
 )
 
-var serviceConfig = config.NewConfig()
-var rateServiceWorker *service.RateServiceWorker
-
 func main() {
-	var err error
 
-	ticker := time.NewTicker(serviceConfig.WorkerTickInterval)
-
-	rateServiceWorker, err = service.NewRateServiceWorker(serviceConfig)
+	serviceConfig := config.NewConfig()
+	db, err := sql.Open("postgres", serviceConfig.PostgresConnectionString)
 	if err != nil {
 		panic(err)
 	}
+
+	exchangeRateStorage := storage.NewExchangeRateStorage(db)
+	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
+	repo := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
+	client := integration.NewExchangeRateApiClient(serviceConfig)
+
+	rateServiceWorker := service.NewRateServiceWorker(serviceConfig, repo, client)
+	ticker := time.NewTicker(serviceConfig.WorkerTickInterval)
 
 	for {
 		<-ticker.C

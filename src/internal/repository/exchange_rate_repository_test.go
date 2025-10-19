@@ -134,7 +134,7 @@ func TestUpdateRate_Success(t *testing.T) {
 	rate := decimal.NewFromFloat(1.35)
 	updateId := "update-123"
 	fromCurrency := "USD"
-	toCurrency := "EUR"	
+	toCurrency := "EUR"
 
 	sqlMock.ExpectBegin()
 
@@ -248,12 +248,11 @@ func TestGetLastRate_ReturnsEmptyWhenRateNotFound(t *testing.T) {
 	mockRateStorage.AssertExpectations(t)
 }
 
-
 func createMocks(t *testing.T) (
-	*MockExchangeRateStorage, 
-	*MockExchangeRateUpdateStorage, 
-	*ExchangeRateRepository, 
-	*sql.DB, 
+	*MockExchangeRateStorage,
+	*MockExchangeRateUpdateStorage,
+	*RateRepository,
+	*sql.DB,
 	sqlmock.Sqlmock) {
 	mockUpdateStorage := new(MockExchangeRateUpdateStorage)
 	mockRateStorage := new(MockExchangeRateStorage)
