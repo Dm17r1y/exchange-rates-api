@@ -18,7 +18,7 @@ func NewRateServiceWorker(config *config.Config, repo repository.ExchangeRateRep
 	serviceWorker := RateServiceWorker{
 		config:     config,
 		repository: repo,
-		client:     integration.NewExchangeRateApiClient(config),
+		client:     client,
 	}
 
 	return &serviceWorker

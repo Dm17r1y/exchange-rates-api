@@ -6,6 +6,7 @@ import (
 	"exchange-rates-service/src/config"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/shopspring/decimal"
 )
@@ -16,6 +17,7 @@ type ExchangeRateApiClient interface {
 
 type ExchangeRateClient struct {
 	config *config.Config
+	client *http.Client
 }
 
 type ExchangeRateApiResponse struct {
@@ -28,6 +30,9 @@ type ExchangeRateApiResponse struct {
 func NewExchangeRateApiClient(config *config.Config) ExchangeRateApiClient {
 	return &ExchangeRateClient{
 		config: config,
+		client:  &http.Client{
+			Timeout: 10 * time.Second,
+		},
 	}
 }
 
@@ -37,7 +42,7 @@ func (c *ExchangeRateClient) GetRate(from string, to string) (decimal.Decimal, e
 	apiKey := c.config.ExchangeIoApiKey
 	fullUrl := fmt.Sprintf("%s/v1/latest?access_key=%s&base=%s&symbols=%s", apiBaseUrl, apiKey, from, to)
 
-	resp, err := http.Get(fullUrl)
+	resp, err := c.client.Get(fullUrl)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

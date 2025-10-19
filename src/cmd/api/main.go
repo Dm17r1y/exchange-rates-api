@@ -21,7 +21,9 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-var rateService *service.RateService
+type HttpHandler struct {
+	rateService *service.RateService
+}
 
 // StartUpdateRate godoc
 //
@@ -33,7 +35,7 @@ var rateService *service.RateService
 //	@Param			request	body		model.StartUpdateRateRequest	true	"Update request"
 //	@Success		200		{object}	model.StartUpdateRateResponse	"OK"
 //	@Router			/api/rates/v1/update/start [post]
-func startUpdateRate(w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) startUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.NotFound(w, r)
 		return
@@ -50,7 +52,7 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updateId, err := rateService.StartUpdateRate(request.From, request.To)
+	updateId, err := h.rateService.StartUpdateRate(request.From, request.To)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -60,6 +62,7 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 		UpdateId: updateId,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	if err = json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, err)
 		return
@@ -78,7 +81,7 @@ func startUpdateRate(w http.ResponseWriter, r *http.Request) {
 //	@Failure		404			{string}	error					"NotFound"
 //	@Failure		400			{string}	error					"BadRequest"
 //	@Router			/api/rates/v1/update [get]
-func getUpdateRate(w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.NotFound(w, r)
 		return
@@ -90,15 +93,16 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	update, err := rateService.GetRateUpdate(updateId)
+	update, err := h.rateService.GetRateUpdate(updateId)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
 	if update.UpdateDateTime == nil {
-		err = json.NewEncoder(w).Encode(update)
-		handleError(w, err)
+		if err = json.NewEncoder(w).Encode(update); err != nil {
+			handleError(w, err)
+		}
 		return
 	}
 
@@ -109,6 +113,7 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 		UpdateTime: &updateValue,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	if err = json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, err)
 		return
@@ -128,7 +133,7 @@ func getUpdateRate(w http.ResponseWriter, r *http.Request) {
 //	@Failure		404		{string}	error					"NotFound"
 //	@Failure		400		{string}	error					"BadRequest"
 //	@Router			/api/rates/v1/update/last [get]
-func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.NotFound(w, r)
 		return
@@ -147,7 +152,7 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rate, err := rateService.GetLastRate(from, to)
+	rate, err := h.rateService.GetLastRate(from, to)
 
 	if err != nil {
 		handleError(w, err)
@@ -155,8 +160,9 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rate.UpdateDateTime == nil {
-		err = json.NewEncoder(w).Encode(model.GetRateResponse{})
-		handleError(w, err)
+		if err = json.NewEncoder(w).Encode(model.GetRateResponse{}); err != nil {
+			handleError(w, err)
+		}
 		return
 	}
 
@@ -167,6 +173,7 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 		UpdateTime: &updateValue,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	if err = json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, err)
 		return
@@ -174,10 +181,6 @@ func getLastUpdateRate(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleError(w http.ResponseWriter, err error) {
-	if err == nil {
-		return
-	}
-
 	serviceError := &internal.ServiceError{}
 	if errors.As(err, &serviceError) {
 		http.Error(w, serviceError.ErrorMessage, int(serviceError.ErrorType))
@@ -195,15 +198,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 
 	exchangeRateStorage := storage.NewExchangeRateStorage(db)
 	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
 	repo := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
-	rateService = service.NewRateService(repo)
+	rateService := service.NewRateService(repo)
+	handler := HttpHandler{rateService: rateService}
 
-	http.HandleFunc("/api/rates/v1/update/start", startUpdateRate)
-	http.HandleFunc("/api/rates/v1/update", getUpdateRate)
-	http.HandleFunc("/api/rates/v1/update/last", getLastUpdateRate)
+	http.HandleFunc("/api/rates/v1/update/start", handler.startUpdateRate)
+	http.HandleFunc("/api/rates/v1/update", handler.getUpdateRate)
+	http.HandleFunc("/api/rates/v1/update/last", handler.getLastUpdateRate)
 
 	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
