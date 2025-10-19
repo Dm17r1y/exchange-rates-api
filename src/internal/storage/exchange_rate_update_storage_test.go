@@ -26,14 +26,14 @@ func TestGetOrCreateRateUpdate_ShouldSuccess(t *testing.T) {
 
 	update, err := storage.GetOrCreateRateUpdate(updateId, from, to)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, updateId, update.Id)
 	assert.Equal(t, from, update.FromCurrency)
 	assert.Equal(t, to, update.ToCurrency)
 	assert.Equal(t, model.StatusUpdating, update.Status)
 
 	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestGetRateUpdate_Success(t *testing.T) {
@@ -54,7 +54,7 @@ func TestGetRateUpdate_Success(t *testing.T) {
 
 	update, err := storage.GetRateUpdate(updateId)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, updateId, update.Id)
 	assert.Equal(t, from, update.FromCurrency)
 	assert.Equal(t, to, update.ToCurrency)
@@ -62,8 +62,7 @@ func TestGetRateUpdate_Success(t *testing.T) {
 	assert.Equal(t, &rateValue, update.RateValue)
 	assert.Equal(t, &updateTime, update.UpdateTime)
 
-	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetRateUpdate_NotFound(t *testing.T) {
@@ -80,10 +79,9 @@ func TestGetRateUpdate_NotFound(t *testing.T) {
 	update, err := storage.GetRateUpdate(updateId)
 
 	assert.Nil(t, update)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 
-	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetRatesForUpdate_Success(t *testing.T) {
@@ -107,7 +105,7 @@ func TestGetRatesForUpdate_Success(t *testing.T) {
 		WillReturnRows(rows)
 
 	updates, err := storage.GetRatesForUpdate(fetchSize)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Len(t, updates, 3)
 	assert.Equal(t, updates[0], model.ExchangeRateUpdateDbo{Id: "update-1", FromCurrency: "USD", ToCurrency: "EUR"})
 	assert.Equal(t, updates[1], model.ExchangeRateUpdateDbo{Id: "update-2", FromCurrency: "EUR", ToCurrency: "USD"})
@@ -117,8 +115,7 @@ func TestGetRatesForUpdate_Success(t *testing.T) {
 		assert.Equal(t, model.StatusUpdating, update.Status)
 	}
 
-	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetRatesForUpdate_EmptyResult(t *testing.T) {
@@ -134,11 +131,10 @@ func TestGetRatesForUpdate_EmptyResult(t *testing.T) {
 
 	updates, err := storage.GetRatesForUpdate(fetchSize)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Len(t, updates, 0)
 	
-	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestUpdateRateTx_Success(t *testing.T) {
@@ -162,16 +158,16 @@ func TestUpdateRateTx_Success(t *testing.T) {
 	mock.ExpectCommit()
 
 	tx, err := db.Begin()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = storage.UpdateRateTx(tx, &updateDbo)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = tx.Commit()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestSetError_Success(t *testing.T) {
@@ -186,16 +182,14 @@ func TestSetError_Success(t *testing.T) {
 
 	err := storage.SetError(updateId)
 
-	assert.Nil(t, err)
-
-	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 
 func createUpdateMockStorage(t *testing.T) (ExchangeRateUpdateStorage, *sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	storage := NewExchangeRateUpdateStorage(db)
 	return storage, db, mock

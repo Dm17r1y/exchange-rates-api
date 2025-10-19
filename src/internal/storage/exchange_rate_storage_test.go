@@ -26,7 +26,7 @@ func TestGetRate_Success(t *testing.T) {
 
 	rate, err := storage.GetRate(from, to)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, from, rate.FromCurrency)
 	assert.Equal(t, to, rate.ToCurrency)
 
@@ -34,8 +34,7 @@ func TestGetRate_Success(t *testing.T) {
 	assert.Equal(t, &expectedRateValue, rate.RateValue)
 	assert.Equal(t, &updateTime, rate.UpdateTime)
 
-	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetRate_NotFound(t *testing.T) {
@@ -51,10 +50,9 @@ func TestGetRate_NotFound(t *testing.T) {
 
 	rate, err := storage.GetRate(from, to)
 	assert.Nil(t, rate)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 
-	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func SetRateTx_Success(t *testing.T) {
@@ -76,22 +74,22 @@ func SetRateTx_Success(t *testing.T) {
 	mock.ExpectCommit()
 
 	tx, err := db.Begin()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = storage.SetRateTx(tx, &dbo)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	
 	err = tx.Commit()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = mock.ExpectationsWereMet()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 
 func createRateMockStorage(t *testing.T) (ExchangeRateStorage, *sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	storage := NewExchangeRateStorage(db)
 	return storage, db, mock

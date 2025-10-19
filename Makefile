@@ -21,6 +21,9 @@ run:
 migrate:
 	go run src/cmd/migrate/main.go
 
+test:
+	go test -v ./...
+
 format:
 	gofmt -s -w .
 	goimports -w .
