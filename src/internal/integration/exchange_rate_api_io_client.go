@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/shopspring/decimal"
 )
@@ -16,32 +15,32 @@ type ExchangeRateApiClient interface {
 	GetRate(from string, to string) (decimal.Decimal, error)
 }
 
-type ExchangeRateClient struct {
+type ExchangeRateApiIoClient struct {
 	config *config.Config
 	client *http.Client
 }
 
-type ExchangeRateApiResponse struct {
+type ExchangeRateApiIoResponse struct {
 	Success   bool                       `json:"success"`
 	Timestamp uint64                     `json:"timestamp"`
 	Base      string                     `json:"base"`
 	Rates     map[string]decimal.Decimal `json:"rates"`
 }
 
-func NewExchangeRateApiClient(config *config.Config) ExchangeRateApiClient {
-	return &ExchangeRateClient{
+func NewExchangeRateApiIoClient(config *config.Config) ExchangeRateApiClient {
+	return &ExchangeRateApiIoClient{
 		config: config,
 		client: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: config.HttpClientTimeout,
 		},
 	}
 }
 
-const apiBaseUrl = "https://api.exchangeratesapi.io"
+const exchangeRatesApiIoBaseUrl = "https://api.exchangeratesapi.io"
 
-func (c *ExchangeRateClient) GetRate(from string, to string) (decimal.Decimal, error) {
+func (c *ExchangeRateApiIoClient) GetRate(from string, to string) (decimal.Decimal, error) {
 	apiKey := c.config.ExchangeIoApiKey
-	fullUrl := fmt.Sprintf("%s/v1/latest?access_key=%s&base=%s&symbols=%s", apiBaseUrl, apiKey, from, to)
+	fullUrl := fmt.Sprintf("%s/v1/latest?access_key=%s&base=%s&symbols=%s", exchangeRatesApiIoBaseUrl, apiKey, from, to)
 
 	resp, err := c.client.Get(fullUrl)
 	if err != nil {
@@ -49,7 +48,7 @@ func (c *ExchangeRateClient) GetRate(from string, to string) (decimal.Decimal, e
 	}
 	defer resp.Body.Close()
 
-	response := ExchangeRateApiResponse{}
+	response := ExchangeRateApiIoResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		return decimal.Decimal{}, err
@@ -60,7 +59,7 @@ func (c *ExchangeRateClient) GetRate(from string, to string) (decimal.Decimal, e
 		if err != nil {
 			return decimal.Decimal{}, err
 		}
-		
+
 		return decimal.Decimal{}, errors.New(string(bodyBytes))
 	}
 

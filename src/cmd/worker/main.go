@@ -24,7 +24,13 @@ func main() {
 	exchangeRateStorage := storage.NewExchangeRateStorage(db)
 	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
 	repo := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
-	client := integration.NewExchangeRateApiClient(serviceConfig)
+	
+	var client integration.ExchangeRateApiClient
+	if serviceConfig.ExchangeIoApiKey != "" {
+		client = integration.NewExchangeRateApiIoClient(serviceConfig)
+	} else {
+		client = integration.NewCurrencyApiClient(serviceConfig)
+	}
 
 	rateServiceWorker := service.NewRateServiceWorker(serviceConfig, repo, client)
 	ticker := time.NewTicker(serviceConfig.WorkerTickInterval)

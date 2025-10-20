@@ -14,6 +14,7 @@ type Config struct {
 	ExchangeIoApiKey         string
 	WorkerFetchSize          int
 	WorkerTickInterval       time.Duration
+	HttpClientTimeout 	time.Duration
 }
 
 func NewConfig() *Config {
@@ -39,14 +40,23 @@ func NewConfig() *Config {
 
 	exchangeRatesApiKey := os.Getenv("EXCHANGE_RATES_IO_API_KEY")
 	if exchangeRatesApiKey == "" {
-		log.Fatal("EXCHANGE_RATES_IO_API_KEY is not set")
+		log.Println("EXCHANGE_RATES_IO_API_KEY is not set. currency-api will be used")
+	} else {
+		log.Println("EXCHANGE_RATES_IO_API_KEY found. exchangeratesapi.io api will be used")
+
 	}
 
+	httpClientTimeout, err := strconv.Atoi(os.Getenv("HTTP_CLIENT_TIMEOUT_MS"))
+	if err != nil {
+		log.Fatalf("Unable to parse HTTP_CLIENT_TIMEOUT_MS: %s", err)
+	}
+	
 	config := Config{
 		PostgresConnectionString: postgresConnectionString,
 		WorkerFetchSize:          workerFetchSize,
 		WorkerTickInterval:       time.Duration(WorkerTickInterval) * time.Millisecond,
 		ExchangeIoApiKey:         exchangeRatesApiKey,
+		HttpClientTimeout: 		  time.Duration(httpClientTimeout) * time.Millisecond,
 	}
 
 	return &config

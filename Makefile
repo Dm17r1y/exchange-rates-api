@@ -1,4 +1,4 @@
-all: .env.secret build run migrate
+all: build run migrate
 
 .env.secret:
 	@if [ "$(API_KEY)" = "" ]; then \

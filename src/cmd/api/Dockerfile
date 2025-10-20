@@ -8,7 +8,9 @@ RUN go mod download
 
 COPY . /app
 
-RUN go build -o /app/api_service /app/src/cmd/api/main.go
+RUN go build -o /app/api_service /app/src/cmd/api/main.go \
+    && touch /app/.env \
+    && touch /app/.env.secret
 
 FROM alpine:latest
 
