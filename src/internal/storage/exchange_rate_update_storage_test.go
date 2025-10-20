@@ -21,7 +21,7 @@ func TestGetOrCreateRateUpdate_ShouldSuccess(t *testing.T) {
 
 	mock.ExpectPrepare(regexp.QuoteMeta(getOrCreateRateUpdateSql)).
 		ExpectQuery().
-		WithArgs(updateId, from, to).
+		WithArgs(updateId, from, to, model.StatusUpdating).
 		WillReturnRows(rows)
 
 	update, err := storage.GetOrCreateRateUpdate(updateId, from, to)
@@ -101,7 +101,7 @@ func TestGetRatesForUpdate_Success(t *testing.T) {
 
 	mock.ExpectPrepare(regexp.QuoteMeta(getRatesForUpdateSql)).
 		ExpectQuery().
-		WithArgs(fetchSize).
+		WithArgs(fetchSize, model.StatusUpdating).
 		WillReturnRows(rows)
 
 	updates, err := storage.GetRatesForUpdate(fetchSize)
@@ -126,7 +126,7 @@ func TestGetRatesForUpdate_EmptyResult(t *testing.T) {
 
 	mock.ExpectPrepare(regexp.QuoteMeta(getRatesForUpdateSql)).
 		ExpectQuery().
-		WithArgs(fetchSize).
+		WithArgs(fetchSize, model.StatusUpdating).
 		WillReturnRows(rows)
 
 	updates, err := storage.GetRatesForUpdate(fetchSize)
@@ -177,7 +177,7 @@ func TestSetError_Success(t *testing.T) {
 
 	mock.ExpectPrepare(regexp.QuoteMeta(setErrorSql)).
 		ExpectExec().
-		WithArgs(updateId).
+		WithArgs(updateId, model.StatusError).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	err := storage.SetError(updateId)

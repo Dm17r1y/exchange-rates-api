@@ -160,6 +160,6 @@ func (storage *SqlExchangeRateUpdateStorage) SetError(updateId string) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(context.Background(), updateId, int(model.StatusError))
+	_, err = stmt.ExecContext(context.Background(), updateId, model.StatusError)
 	return err
 }

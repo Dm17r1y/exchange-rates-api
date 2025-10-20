@@ -1,5 +1,6 @@
 all: build run migrate
 
+# Generate make .env.secret API_KEY=<exchangeratesapi.io api key> if you want to use exchangeratesapi.io
 .env.secret:
 	@if [ "$(API_KEY)" = "" ]; then \
 		echo "make .env.secret: API_KEY is not set"; \
