@@ -14,7 +14,7 @@ type Config struct {
 	ExchangeIoApiKey         string
 	WorkerFetchSize          int
 	WorkerTickInterval       time.Duration
-	HttpClientTimeout 	time.Duration
+	HttpClientTimeout        time.Duration
 }
 
 func NewConfig() *Config {
@@ -50,13 +50,13 @@ func NewConfig() *Config {
 	if err != nil {
 		log.Fatalf("Unable to parse HTTP_CLIENT_TIMEOUT_MS: %s", err)
 	}
-	
+
 	config := Config{
 		PostgresConnectionString: postgresConnectionString,
 		WorkerFetchSize:          workerFetchSize,
 		WorkerTickInterval:       time.Duration(WorkerTickInterval) * time.Millisecond,
 		ExchangeIoApiKey:         exchangeRatesApiKey,
-		HttpClientTimeout: 		  time.Duration(httpClientTimeout) * time.Millisecond,
+		HttpClientTimeout:        time.Duration(httpClientTimeout) * time.Millisecond,
 	}
 
 	return &config

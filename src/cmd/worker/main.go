@@ -24,7 +24,7 @@ func main() {
 	exchangeRateStorage := storage.NewExchangeRateStorage(db)
 	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
 	repo := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
-	
+
 	var client integration.ExchangeRateApiClient
 	if serviceConfig.ExchangeIoApiKey != "" {
 		client = integration.NewExchangeRateApiIoClient(serviceConfig)
