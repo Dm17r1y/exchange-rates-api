@@ -72,7 +72,7 @@ func (h *HttpHandler) startUpdateRate(w http.ResponseWriter, r *http.Request) {
 // GetUpdateRate godoc
 //
 //	@Summary		Get exchange rate update
-//	@Description	Get the exchange rate update by updateId. Returns rate and updateTime. Both will be null if the update was not performed
+//	@Description	Get the exchange rate update by updateId. You can retrieve updateId in StartUpdateRate method. Returns rate and updateTime. Both will be null if the update was not performed
 //	@Tags			exchange-rate-api
 //	@Accept			json
 //	@Produce		json
@@ -123,7 +123,7 @@ func (h *HttpHandler) getUpdateRate(w http.ResponseWriter, r *http.Request) {
 // GetLastUpdateRate godoc
 //
 //	@Summary		Get last exchange rate update
-//	@Description	Get exchange rate update. Returns rate and updateTime
+//	@Description	Get exchange rate update started by StartUpdateRate method. Returns rate and updateTime
 //	@Tags			exchange-rate-api
 //	@Accept			json
 //	@Produce		json

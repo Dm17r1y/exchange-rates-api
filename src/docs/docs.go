@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/api/rates/v1/update": {
             "get": {
-                "description": "Get the exchange rate update by updateId. Returns rate and updateTime. Both will be null if the update was not performed",
+                "description": "Get the exchange rate update by updateId. You can retrieve updateId in StartUpdateRate method. Returns rate and updateTime. Both will be null if the update was not performed",
                 "consumes": [
                     "application/json"
                 ],
@@ -61,7 +61,7 @@ const docTemplate = `{
         },
         "/api/rates/v1/update/last": {
             "get": {
-                "description": "Get exchange rate update. Returns rate and updateTime",
+                "description": "Get exchange rate update started by StartUpdateRate method. Returns rate and updateTime",
                 "consumes": [
                     "application/json"
                 ],
