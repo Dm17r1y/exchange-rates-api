@@ -7,11 +7,11 @@ import (
 	"exchange-rates-service/src/internal/model"
 )
 
-type SqlExchangeRateUpdateStorage struct {
+type PostgresUpdateStorage struct {
 	db *sql.DB
 }
 
-type ExchangeRateUpdateStorage interface {
+type UpdateStorage interface {
 	GetOrCreateRateUpdate(updateId string, from string, to string) (*model.ExchangeRateUpdateDbo, error)
 	GetRateUpdate(updateId string) (*model.ExchangeRateUpdateDbo, error)
 	GetRatesForUpdate(fetchSize int) ([]model.ExchangeRateUpdateDbo, error)
@@ -19,8 +19,8 @@ type ExchangeRateUpdateStorage interface {
 	SetError(updateId string) error
 }
 
-func NewExchangeRateUpdateStorage(db *sql.DB) ExchangeRateUpdateStorage {
-	return &SqlExchangeRateUpdateStorage{db: db}
+func NewUpdateStorage(db *sql.DB) UpdateStorage {
+	return &PostgresUpdateStorage{db: db}
 }
 
 const getOrCreateRateUpdateSql = `
@@ -40,7 +40,7 @@ UNION ALL
 SELECT id FROM new_update
 `
 
-func (storage *SqlExchangeRateUpdateStorage) GetOrCreateRateUpdate(updateId string, from string, to string) (*model.ExchangeRateUpdateDbo, error) {
+func (storage *PostgresUpdateStorage) GetOrCreateRateUpdate(updateId string, from string, to string) (*model.ExchangeRateUpdateDbo, error) {
 	stmt, err := storage.db.PrepareContext(context.Background(), getOrCreateRateUpdateSql)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ FROM exchange_rate_update
 WHERE id = $1
 `
 
-func (storage *SqlExchangeRateUpdateStorage) GetRateUpdate(updateId string) (*model.ExchangeRateUpdateDbo, error) {
+func (storage *PostgresUpdateStorage) GetRateUpdate(updateId string) (*model.ExchangeRateUpdateDbo, error) {
 	stmt, err := storage.db.PrepareContext(context.Background(), getRateUpdateSql)
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ WHERE status = $2
 LIMIT $1
 `
 
-func (storage *SqlExchangeRateUpdateStorage) GetRatesForUpdate(fetchSize int) ([]model.ExchangeRateUpdateDbo, error) {
+func (storage *PostgresUpdateStorage) GetRatesForUpdate(fetchSize int) ([]model.ExchangeRateUpdateDbo, error) {
 	stmt, err := storage.db.PrepareContext(context.Background(), getRatesForUpdateSql)
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ SET rate_value = $2, update_time = $3, status = $4
 WHERE id = $1
 `
 
-func (storage *SqlExchangeRateUpdateStorage) UpdateRateTx(tx *sql.Tx, model *model.ExchangeRateUpdateDbo) error {
+func (storage *PostgresUpdateStorage) UpdateRateTx(tx *sql.Tx, model *model.ExchangeRateUpdateDbo) error {
 	stmt, err := tx.PrepareContext(context.Background(), updateRateSql)
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ SET status = $2
 WHERE id = $1
 `
 
-func (storage *SqlExchangeRateUpdateStorage) SetError(updateId string) error {
+func (storage *PostgresUpdateStorage) SetError(updateId string) error {
 	stmt, err := storage.db.PrepareContext(context.Background(), setErrorSql)
 	if err != nil {
 		return err

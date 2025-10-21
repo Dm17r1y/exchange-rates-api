@@ -86,10 +86,10 @@ func SetRateTx_Success(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func createRateMockStorage(t *testing.T) (ExchangeRateStorage, *sql.DB, sqlmock.Sqlmock) {
+func createRateMockStorage(t *testing.T) (RateStorage, *sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 
-	storage := NewExchangeRateStorage(db)
+	storage := NewRateStorage(db)
 	return storage, db, mock
 }

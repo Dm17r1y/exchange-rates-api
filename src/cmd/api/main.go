@@ -100,7 +100,7 @@ func (h *HttpHandler) getUpdateRate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if update.UpdateDateTime == nil {
-		if err = json.NewEncoder(w).Encode(update); err != nil {
+		if err = json.NewEncoder(w).Encode(model.GetRateResponse{}); err != nil {
 			handleError(w, err)
 		}
 		return
@@ -200,8 +200,8 @@ func main() {
 	}
 	defer db.Close()
 
-	exchangeRateStorage := storage.NewExchangeRateStorage(db)
-	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
+	exchangeRateStorage := storage.NewRateStorage(db)
+	exchangeRateUpdateStorage := storage.NewUpdateStorage(db)
 	repo := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
 	rateService := service.NewRateService(repo)
 	handler := HttpHandler{rateService: rateService}

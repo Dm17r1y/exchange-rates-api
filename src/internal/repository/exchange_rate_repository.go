@@ -21,17 +21,17 @@ type ExchangeRateRepository interface {
 	GetLastRate(from string, to string) (model.ExchangeRate, error)
 }
 
-type RateRepository struct {
+type PostgresExchangeRateRepository struct {
 	db            *sql.DB
-	rateStorage   storage.ExchangeRateStorage
-	updateStorage storage.ExchangeRateUpdateStorage
+	rateStorage   storage.RateStorage
+	updateStorage storage.UpdateStorage
 }
 
 func NewExchangeRateRepository(
 	db *sql.DB,
-	rateStorage storage.ExchangeRateStorage,
-	rateUpdateStorage storage.ExchangeRateUpdateStorage) *RateRepository {
-	repository := RateRepository{
+	rateStorage storage.RateStorage,
+	rateUpdateStorage storage.UpdateStorage) *PostgresExchangeRateRepository {
+	repository := PostgresExchangeRateRepository{
 		db:            db,
 		rateStorage:   rateStorage,
 		updateStorage: rateUpdateStorage,
@@ -39,7 +39,7 @@ func NewExchangeRateRepository(
 	return &repository
 }
 
-func (r *RateRepository) GetOrCreateRateUpdate(from string, to string) (string, error) {
+func (r *PostgresExchangeRateRepository) GetOrCreateRateUpdate(from string, to string) (string, error) {
 	updateId := uuid.New()
 	update, err := r.updateStorage.GetOrCreateRateUpdate(updateId.String(), from, to)
 	if err != nil {
@@ -48,7 +48,7 @@ func (r *RateRepository) GetOrCreateRateUpdate(from string, to string) (string, 
 	return update.Id, nil
 }
 
-func (r *RateRepository) GetRateUpdate(updateId string) (model.ExchangeRate, error) {
+func (r *PostgresExchangeRateRepository) GetRateUpdate(updateId string) (model.ExchangeRate, error) {
 	update, err := r.updateStorage.GetRateUpdate(updateId)
 	if err != nil {
 		return model.ExchangeRate{}, err
@@ -66,15 +66,15 @@ func (r *RateRepository) GetRateUpdate(updateId string) (model.ExchangeRate, err
 	return rate, nil
 }
 
-func (r *RateRepository) GetRatesForUpdate(fetchSize int) ([]model.ExchangeRateUpdateDbo, error) {
+func (r *PostgresExchangeRateRepository) GetRatesForUpdate(fetchSize int) ([]model.ExchangeRateUpdateDbo, error) {
 	return r.updateStorage.GetRatesForUpdate(fetchSize)
 }
 
-func (r *RateRepository) SetUpdateError(updateId string) error {
+func (r *PostgresExchangeRateRepository) SetUpdateError(updateId string) error {
 	return r.updateStorage.SetError(updateId)
 }
 
-func (r *RateRepository) UpdateRate(updateId string, from string, to string, rate decimal.Decimal) error {
+func (r *PostgresExchangeRateRepository) UpdateRate(updateId string, from string, to string, rate decimal.Decimal) error {
 
 	tx, err := r.db.BeginTx(context.Background(), nil)
 	if err != nil {
@@ -111,7 +111,7 @@ func (r *RateRepository) UpdateRate(updateId string, from string, to string, rat
 	return tx.Commit()
 }
 
-func (r *RateRepository) GetLastRate(from string, to string) (model.ExchangeRate, error) {
+func (r *PostgresExchangeRateRepository) GetLastRate(from string, to string) (model.ExchangeRate, error) {
 	rate, err := r.rateStorage.GetRate(from, to)
 
 	if err != nil {

@@ -91,7 +91,7 @@ func TestGetRatesForUpdate_Success(t *testing.T) {
 	}
 	defer db.Close()
 
-	storage := NewExchangeRateUpdateStorage(db)
+	storage := NewUpdateStorage(db)
 
 	fetchSize := 10
 	rows := sqlmock.NewRows([]string{"id", "from_currency", "to_currency"}).
@@ -186,10 +186,10 @@ func TestSetError_Success(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func createUpdateMockStorage(t *testing.T) (ExchangeRateUpdateStorage, *sql.DB, sqlmock.Sqlmock) {
+func createUpdateMockStorage(t *testing.T) (UpdateStorage, *sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 
-	storage := NewExchangeRateUpdateStorage(db)
+	storage := NewUpdateStorage(db)
 	return storage, db, mock
 }

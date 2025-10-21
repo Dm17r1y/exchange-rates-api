@@ -21,8 +21,8 @@ func main() {
 		panic(err)
 	}
 
-	exchangeRateStorage := storage.NewExchangeRateStorage(db)
-	exchangeRateUpdateStorage := storage.NewExchangeRateUpdateStorage(db)
+	exchangeRateStorage := storage.NewRateStorage(db)
+	exchangeRateUpdateStorage := storage.NewUpdateStorage(db)
 	repo := repository.NewExchangeRateRepository(db, exchangeRateStorage, exchangeRateUpdateStorage)
 
 	var client integration.ExchangeRateApiClient

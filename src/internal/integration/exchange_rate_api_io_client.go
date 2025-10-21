@@ -5,7 +5,6 @@ import (
 	"errors"
 	"exchange-rates-service/src/config"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/shopspring/decimal"
@@ -55,12 +54,7 @@ func (c *ExchangeRateApiIoClient) GetRate(from string, to string) (decimal.Decim
 	}
 
 	if !response.Success {
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return decimal.Decimal{}, err
-		}
-
-		return decimal.Decimal{}, errors.New(string(bodyBytes))
+		return decimal.Decimal{}, errors.New("Error parsing response")
 	}
 
 	rate, ok := response.Rates[to]

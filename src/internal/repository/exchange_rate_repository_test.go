@@ -251,7 +251,7 @@ func TestGetLastRate_ReturnsEmptyWhenRateNotFound(t *testing.T) {
 func createMocks(t *testing.T) (
 	*MockExchangeRateStorage,
 	*MockExchangeRateUpdateStorage,
-	*RateRepository,
+	*PostgresExchangeRateRepository,
 	*sql.DB,
 	sqlmock.Sqlmock) {
 	mockUpdateStorage := new(MockExchangeRateUpdateStorage)
